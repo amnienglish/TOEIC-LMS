@@ -9,7 +9,7 @@
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Lucide Icons untuk Ikon -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Quill.js untuk Rich Text Editor -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -480,16 +480,13 @@
         let currentUser = null, profileData = null, examQuestions = [], currentIdx = 0, studentAnswers = [];
         let qEditor = null, pEditor = null; 
         let examTimer = null, timeLeft = 0, currentMeeting = 1;
-        let meetingLocks = {}; // State untuk status buka/tutup pertemuan
-        let currentQuestionsRaw = []; // Simpan data soal untuk menghindari masalah kutipan di HTML
+        let meetingLocks = {}; 
+        let currentQuestionsRaw = []; 
         let sortableInstance = null;
 
         // --- GLOBAL UI HELPERS ---
-        function refreshIcons() { 
-            if (typeof lucide !== 'undefined' && lucide.createIcons) { 
-                lucide.createIcons(); 
-            } 
-        }
+        function refreshIcons() { if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); } }
+        function setLoading(v) { document.getElementById('loader').classList.toggle('hidden', !v); }
 
         let onConfirmCallback = null;
         window.customConfirm = function(message, callback, okText = "Ya, Lanjutkan") {
@@ -517,7 +514,11 @@
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
         }
 
-        function setLoading(v) { document.getElementById('loader').classList.toggle('hidden', !v); }
+        // --- AUTH UI FUNCTIONS ---
+        window.toggleAuth = (isReg) => {
+            document.getElementById('form-login').classList.toggle('hidden', isReg);
+            document.getElementById('form-register').classList.toggle('hidden', !isReg);
+        };
 
         function getToeicLevel(score) {
             if (score >= 785) return { label: 'Gold', color: 'bg-yellow-100 text-yellow-700', full: 'Professional Proficiency' };
@@ -529,7 +530,7 @@
 
         // --- MEETING LOCK FUNCTIONS ---
         async function fetchMeetingLocks() {
-            const { data, error } = await _sb.from('meeting_locks').select('*').order('meeting_number', { ascending: true });
+            const { data } = await _sb.from('meeting_locks').select('*').order('meeting_number', { ascending: true });
             if (data) {
                 data.forEach(item => meetingLocks[item.meeting_number] = item.is_open);
                 if (currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin')) renderAdminLocks();
@@ -554,8 +555,8 @@
             for(let i=1; i<=16; i++) {
                 const isOpen = meetingLocks[i] || false;
                 grid.innerHTML += `
-                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-3xl border-2 border-slate-100 transition-all hover:bg-white hover:border-sage group">
-                        <span class="font-black text-slate-400 group-hover:text-sage transition-colors">#${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</span>
+                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-3xl border-2 border-slate-100 hover:border-sage transition-all">
+                        <span class="font-black text-slate-400">#${i}</span>
                         <label class="switch">
                             <input type="checkbox" ${isOpen ? 'checked' : ''} onchange="toggleMeetingLock(${i}, this.checked)">
                             <span class="slider"></span>
@@ -565,51 +566,41 @@
         }
 
         // --- GLOBAL ACTION FUNCTIONS ---
-        window.deleteQuestion = (id) => customConfirm("Apakah Anda yakin ingin menghapus soal ini?", async () => {
+        window.deleteQuestion = (id) => customConfirm("Hapus soal ini?", async () => {
             setLoading(true); await _sb.from('questions').delete().eq('id', id); setLoading(false);
-            notify("Soal telah dihapus."); loadQuestionData();
+            notify("Soal dihapus."); loadQuestionData();
         });
 
         window.editQuestionByIndex = (index) => {
-            const q = currentQuestionsRaw[index];
-            if (!q) return;
-
+            const q = currentQuestionsRaw[index]; if (!q) return;
             document.getElementById('form-question-title').innerText = 'Edit Data Soal';
             document.getElementById('q-edit-id').value = q.id;
-            
-            qEditor.root.innerHTML = q.question_text || '';
-            pEditor.root.innerHTML = q.passage_text || '';
-            
-            document.getElementById('q-opt-a').value = q.option_a || '';
-            document.getElementById('q-opt-b').value = q.option_b || '';
-            document.getElementById('q-opt-c').value = q.option_c || '';
-            document.getElementById('q-opt-d').value = q.option_d || '';
-            document.getElementById('q-correct').value = q.correct_answer || 'A';
-            document.getElementById('q-cat').value = q.category || 'Listening';
+            qEditor.root.innerHTML = q.question_text || ''; pEditor.root.innerHTML = q.passage_text || '';
+            document.getElementById('q-opt-a').value = q.option_a || ''; document.getElementById('q-opt-b').value = q.option_b || '';
+            document.getElementById('q-opt-c').value = q.option_c || ''; document.getElementById('q-opt-d').value = q.option_d || '';
+            document.getElementById('q-correct').value = q.correct_answer || 'A'; document.getElementById('q-cat').value = q.category || 'Listening';
             document.getElementById('q-meeting').value = q.meeting_number || 1;
-            
             document.getElementById('btn-save-question').innerText = "Update Data Soal";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        window.deleteStudent = (id) => customConfirm("Hapus akun mahasiswa ini secara permanen?", async () => {
+        window.deleteStudent = (id) => customConfirm("Hapus akun mahasiswa?", async () => {
             setLoading(true); await _sb.from('profiles').delete().eq('id', id); setLoading(false);
             notify("Mahasiswa dihapus."); loadAdminData();
         });
 
-        window.deleteScore = (id) => customConfirm("Hapus rekaman skor ini?", async () => {
+        window.deleteScore = (id) => customConfirm("Hapus rekaman skor?", async () => {
             setLoading(true); await _sb.from('scores').delete().eq('id', id); setLoading(false);
             notify("Skor dihapus."); loadScoreData(); loadAdminData();
         });
 
         window.openEditMhsModal = (id, username, name, email) => {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-username').value = username;
-            document.getElementById('edit-name').value = name;
-            document.getElementById('edit-email').value = email || '';
+            document.getElementById('edit-id').value = id; document.getElementById('edit-username').value = username;
+            document.getElementById('edit-name').value = name; document.getElementById('edit-email').value = email || '';
             document.getElementById('edit-modal').classList.remove('hidden');
         };
+        window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
 
         window.openEditScoreModal = (id, name, meeting, score) => {
             document.getElementById('edit-score-id').value = id;
@@ -618,7 +609,6 @@
             document.getElementById('edit-score-input').value = score;
             document.getElementById('edit-score-modal').classList.remove('hidden');
         };
-
         window.closeEditScoreModal = () => document.getElementById('edit-score-modal').classList.add('hidden');
 
         window.handleUpdateScore = async () => {
@@ -638,7 +628,6 @@
             const meetingSel = document.getElementById('q-meeting');
             const scoreFilter = document.getElementById('admin-score-meeting-filter');
             if(meetingSel) {
-                meetingSel.innerHTML = "";
                 for(let i=1; i<=16; i++) meetingSel.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`;
             }
             if(scoreFilter) {
@@ -670,14 +659,13 @@
             for(let i=1; i<=16; i++) {
                 const isOpen = meetingLocks[i] || (currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin'));
                 const isExam = (i === 8 || i === 16);
-                
                 grid.innerHTML += `
-                    <button onclick="${isOpen ? `startExam(${i})` : `notify('Pertemuan ini masih dikunci oleh dosen.', 'error')`}" 
-                            class="group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${isOpen ? 'border-slate-100 hover:border-sage cursor-pointer' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'}">
+                    <button onclick="${isOpen ? `startExam(${i})` : `notify('Dikunci oleh dosen.', 'error')`}" 
+                            class="group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${isOpen ? 'border-slate-100 hover:border-sage' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'}">
                         <div class="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${isOpen ? (isExam ? 'bg-rose-50 text-rose-500' : 'bg-sage-light text-sage-dark') : 'bg-slate-200 text-slate-400'}">
                             <i data-lucide="${!isOpen ? 'lock' : (isExam ? 'award' : 'book-text')}" class="w-5 h-5"></i>
                         </div>
-                        <p class="text-[10px] font-black uppercase text-slate-400 ${isOpen ? 'group-hover:text-sage' : ''}">Meeting ${i}</p>
+                        <p class="text-[10px] font-black uppercase text-slate-400">Meeting ${i}</p>
                         <p class="text-xs font-bold ${isOpen ? 'text-slate-800' : 'text-slate-400'}">${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}</p>
                     </button>`;
             }
@@ -686,17 +674,11 @@
 
         async function fetchProfileAndShow(uid) {
             const { data } = await _sb.from('profiles').select('*').eq('id', uid).single();
-            if (data) { 
-                profileData = data; 
-                if(!currentUser) currentUser = { id: uid };
-                currentUser.role = data.role; 
-                currentUser.username = data.username; 
-                setupDashboard(data.full_name, data.username); 
-            }
+            if (data) { profileData = data; if(!currentUser) currentUser = { id: uid }; currentUser.role = data.role; currentUser.username = data.username; setupDashboard(data.full_name, data.username); }
         }
 
         function setupDashboard(name, username) {
-            const navName = document.getElementById('display-user-name'); if(navName) navName.innerText = name;
+            if(document.getElementById('display-user-name')) document.getElementById('display-user-name').innerText = name;
             document.getElementById('view-auth').classList.add('hidden');
             document.getElementById('nav-user-info').classList.remove('hidden');
             if(currentUser.role === 'admin' || username === 'admin') {
@@ -719,7 +701,7 @@
             let email = idInput;
             if(!idInput.includes('@')) {
                 const { data } = await _sb.from('profiles').select('email').eq('username', idInput).maybeSingle();
-                if(!data) { setLoading(false); return notify("Username tidak ditemukan!", "error"); }
+                if(!data) { setLoading(false); return notify("Username tidak ada!", "error"); }
                 email = data.email;
             }
             const { error } = await _sb.auth.signInWithPassword({ email: email, password: pass });
@@ -734,7 +716,7 @@
             const { data: auth, error } = await _sb.auth.signUp({ email: e, password: p, options: { data: { full_name: n } } });
             if(error) { setLoading(false); return notify(error.message, "error"); }
             await _sb.from('profiles').insert([{ id: auth.user.id, username: u, full_name: n, email: e, role: 'mahasiswa' }]);
-            setLoading(false); notify("Registrasi Berhasil!"); toggleAuth(false);
+            setLoading(false); notify("Berhasil!"); toggleAuth(false);
         }
 
         async function logout() { await _sb.auth.signOut(); location.reload(); }
@@ -744,9 +726,8 @@
             const body = document.getElementById('table-students'); if(!body) return;
             body.innerHTML = '';
             std?.filter(s => s.role !== 'admin' && s.username !== 'admin').forEach(s => {
-                const sScores = scr?.filter(sc => sc.user_id === s.id).sort((a,b) => b.total_score - a.total_score);
-                const best = (sScores && sScores.length > 0) ? sScores[0].total_score : '0';
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4"></i></button></td></tr>`;
+                const best = scr?.filter(sc => sc.user_id === s.id).sort((a,b) => b.total_score - a.total_score)[0];
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best?best.total_score:'0'}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4"></i></button></td></tr>`;
             });
             refreshIcons();
         }
@@ -756,93 +737,51 @@
             const body = document.getElementById('table-questions'); if(!body) return;
             body.innerHTML = '';
             currentQuestionsRaw = data || []; 
-            
             currentQuestionsRaw.forEach((q, index) => {
-                const cleanText = (q.question_text || "").replace(/<[^>]*>?/gm, '').replace(/'/g, "").substring(0, 50) + "...";
-                body.innerHTML += `
-                    <tr class="hover:bg-slate-50 transition-colors" data-id="${q.id}">
-                        <td class="p-4 text-center">
-                            <div class="drag-handle text-slate-300 hover:text-indigo-500 transition">
-                                <i data-lucide="grip-vertical"></i>
-                            </div>
-                        </td>
-                        <td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td>
-                        <td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td>
-                        <td class="p-6 text-sm text-slate-500 max-w-xs truncate font-medium">${cleanText}</td>
-                        <td class="p-6 text-right flex justify-end gap-3">
-                            <button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                            <button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 hover:bg-rose-50 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>`;
+                const cleanText = (q.question_text || "").replace(/<[^>]*>?/gm, '').substring(0, 50) + "...";
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors" data-id="${q.id}"><td class="p-4 text-center"><div class="drag-handle text-slate-300 hover:text-indigo-500"><i data-lucide="grip-vertical"></i></div></td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
             });
-            refreshIcons();
-            initDragAndDrop();
+            refreshIcons(); initDragAndDrop();
         }
 
         function initDragAndDrop() {
-            const el = document.getElementById('table-questions');
-            if (!el) return;
-            
+            const el = document.getElementById('table-questions'); if (!el) return;
             if (sortableInstance) sortableInstance.destroy();
-
             sortableInstance = new Sortable(el, {
-                handle: '.drag-handle',
-                animation: 250,
-                ghostClass: 'sortable-ghost',
-                onEnd: function() {
-                    document.getElementById('save-order-container').classList.remove('hidden');
-                    notify("Urutan soal diubah. Klik 'SIMPAN' di bawah untuk menyimpan permanen.", "success");
-                }
+                handle: '.drag-handle', animation: 250, ghostClass: 'sortable-ghost',
+                onEnd: function() { document.getElementById('save-order-container').classList.remove('hidden'); }
             });
         }
 
         async function saveManualOrder() {
             setLoading(true);
             const rows = document.querySelectorAll('#table-questions tr');
-            const updates = [];
-            
-            rows.forEach((row, index) => {
-                const id = row.getAttribute('data-id');
-                updates.push({ id, sort_order: index });
-            });
-
-            // Lakukan update satu per satu (karena Supabase upsert butuh key unik yang lengkap)
             try {
-                for (let upd of updates) {
-                    await _sb.from('questions').update({ sort_order: upd.sort_order }).eq('id', upd.id);
+                for (let i = 0; i < rows.length; i++) {
+                    const id = rows[i].getAttribute('data-id');
+                    await _sb.from('questions').update({ sort_order: i }).eq('id', id);
                 }
-                notify("Urutan soal berhasil disimpan secara permanen!");
-                document.getElementById('save-order-container').classList.add('hidden');
-                loadQuestionData();
-            } catch (err) {
-                notify("Gagal menyimpan urutan!", "error");
-            } finally {
-                setLoading(false);
-            }
+                notify("Urutan disimpan!"); document.getElementById('save-order-container').classList.add('hidden'); loadQuestionData();
+            } catch (err) { notify("Gagal!", "error"); } finally { setLoading(false); }
         }
 
         async function handleSaveQuestion() {
             const editId = document.getElementById('q-edit-id').value;
             const qData = {
-                question_text: qEditor.root.innerHTML,
-                passage_text: pEditor.getText().trim() !== "" ? pEditor.root.innerHTML : null,
+                question_text: qEditor.root.innerHTML, passage_text: pEditor.getText().trim() !== "" ? pEditor.root.innerHTML : null,
                 option_a: document.getElementById('q-opt-a').value, option_b: document.getElementById('q-opt-b').value,
                 option_c: document.getElementById('q-opt-c').value, option_d: document.getElementById('q-opt-d').value,
                 correct_answer: document.getElementById('q-correct').value, category: document.getElementById('q-cat').value,
                 meeting_number: parseInt(document.getElementById('q-meeting').value)
             };
-            
-            if(qEditor.getText().trim()==="" || !qData.option_a) return notify("Lengkapi teks soal!", "error");
+            if(qEditor.getText().trim()==="" || !qData.option_a) return notify("Data kurang!", "error");
             setLoading(true);
             try {
                 const aud = document.getElementById('q-audio-file').files[0], img = document.getElementById('q-image-file').files[0];
                 if(aud) { const fn = `aud_${Date.now()}`; await _sb.storage.from('audio-soal').upload(fn, aud); qData.audio_url = `${SB_URL}/storage/v1/object/public/audio-soal/${fn}`; }
                 if(img) { const fn = `img_${Date.now()}`; await _sb.storage.from('image-soal').upload(fn, img); qData.image_url = `${SB_URL}/storage/v1/object/public/image-soal/${fn}`; }
-                
-                if(editId) {
-                    await _sb.from('questions').update(qData).eq('id', editId);
-                } else {
-                    // Set sort_order ke paling akhir jika soal baru
+                if(editId) await _sb.from('questions').update(qData).eq('id', editId);
+                else {
                     const { data: lastQ } = await _sb.from('questions').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
                     qData.sort_order = (lastQ ? lastQ.sort_order : 0) + 1;
                     await _sb.from('questions').insert([qData]);
@@ -861,15 +800,15 @@
 
         async function loadScoreData() {
             const filterValue = document.getElementById('admin-score-meeting-filter').value;
-            setLoading(true); const { data, error } = await _sb.from('scores').select('*').order('created_at', { ascending: false });
+            setLoading(true); const { data } = await _sb.from('scores').select('*').order('created_at', { ascending: false });
             setLoading(false); const body = document.getElementById('table-all-scores'); if(!body) return;
             body.innerHTML = '';
             const filteredData = filterValue === 'all' ? data : data.filter(sc => sc.meeting_number == filterValue);
-            if(!filteredData || filteredData.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Belum ada data.</td></tr>'; return; }
+            if(!filteredData || filteredData.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Kosong.</td></tr>'; return; }
             filteredData.forEach(sc => {
                 const ds = new Date(sc.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
                 const level = getToeicLevel(sc.total_score);
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 text-xs font-bold text-slate-400">${ds}</td><td class="p-6 text-center font-black text-sage">P${sc.meeting_number||1}</td><td class="p-6 font-bold text-slate-800">${sc.student_name}</td><td class="p-6 text-center font-black text-sage-dark"><span class="text-xl">${sc.total_score}</span> <span class="ml-2 px-3 py-1 rounded-full text-[10px] uppercase font-black ${level.color}">${level.label}</span></td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditScoreModal('${sc.id}', '${sc.student_name.replace(/'/g, "\\'")}', '${sc.meeting_number||1}', '${sc.total_score}')" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteScore('${sc.id}')" class="p-3 bg-white border border-slate-200 rounded-xl text-rose-400 hover:bg-rose-50 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 text-xs font-bold text-slate-400">${ds}</td><td class="p-6 text-center font-black text-sage">P${sc.meeting_number||1}</td><td class="p-6 font-bold text-slate-800">${sc.student_name}</td><td class="p-6 text-center font-black text-sage-dark"><span class="text-xl">${sc.total_score}</span> <span class="ml-2 px-3 py-1 rounded-full text-[10px] uppercase font-black ${level.color}">${level.label}</span></td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditScoreModal('${sc.id}', '${sc.student_name}', '${sc.meeting_number||1}', '${sc.total_score}')" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteScore('${sc.id}')" class="p-3 bg-white border border-slate-200 rounded-xl text-rose-400 hover:bg-rose-50 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
             });
             refreshIcons();
         }
@@ -879,7 +818,7 @@
             const list = document.getElementById('student-scores-list'); if(!list) return;
             list.innerHTML = data?.length > 0 ? data.map(s => {
                 const level = getToeicLevel(s.total_score);
-                return `<div class="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm"><div class="flex flex-col gap-1"><p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Meeting ${s.meeting_number} • ${new Date(s.created_at).toLocaleDateString()}</p><p class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full w-fit ${level.color}">${level.label} Level</p></div><div class="text-right"><span class="text-3xl font-black text-sage-dark">${s.total_score}</span><p class="text-[9px] font-bold text-slate-400 uppercase">${level.full}</p></div></div>`;
+                return `<div class="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm"><div class="flex flex-col gap-1"><p class="text-[10px] text-slate-400 font-black uppercase">Meeting ${s.meeting_number} • ${new Date(s.created_at).toLocaleDateString()}</p><p class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full w-fit ${level.color}">${level.label} Level</p></div><div class="text-right"><span class="text-3xl font-black text-sage-dark">${s.total_score}</span><p class="text-[9px] font-bold text-slate-400 uppercase">${level.full}</p></div></div>`;
             }).join('') : '<p class="text-center text-slate-400 italic py-8">Belum ada nilai.</p>';
         }
 
@@ -887,7 +826,7 @@
             setLoading(true); 
             const { data } = await _sb.from('questions').select('*').eq('meeting_number', meetingNo).order('sort_order', { ascending: true }).order('created_at', { ascending: true }); 
             setLoading(false);
-            if(!data || data.length === 0) return notify("Bank soal pertemuan ini kosong!", "error");
+            if(!data || data.length === 0) return notify("Soal kosong!", "error");
             currentMeeting = meetingNo; examQuestions = data; studentAnswers = new Array(data.length).fill(null); currentIdx = 0;
             let totalSeconds = 0; examQuestions.forEach(q => { totalSeconds += (q.category === 'Listening') ? 27 : 45; });
             if(totalSeconds < 120) totalSeconds = 120;
@@ -916,15 +855,15 @@
         function renderQuestion() {
             const q = examQuestions[currentIdx], box = document.getElementById('current-question-box'); if(!box) return;
             let m = ''; if(q.audio_url) m += `<div class="bg-slate-50 p-6 rounded-3xl mb-4 border-2"><audio controls src="${q.audio_url}" class="w-full"></audio></div>`;
-            if(q.image_url) m += `<div class="mb-6 rounded-3xl overflow-hidden border-2 shadow-sm flex justify-center bg-white p-2"><img src="${q.image_url}" class="max-w-md h-auto rounded-lg shadow-inner" onerror="this.style.display='none'"></div>`;
+            if(q.image_url) m += `<div class="mb-6 rounded-3xl overflow-hidden border-2 shadow-sm flex justify-center bg-white p-2"><img src="${q.image_url}" class="max-w-md h-auto" onerror="this.style.display='none'"></div>`;
             let passageHtml = q.passage_text ? `<div class="bg-amber-50 p-8 rounded-3xl mb-8 border-2 border-amber-200 ql-editor passage-content max-h-[500px] overflow-y-auto">${q.passage_text}</div>` : '';
-            box.innerHTML = `<div class="mb-8 flex justify-between items-center"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${q.category}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed font-medium ql-editor px-0">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner':'border-slate-100 bg-white hover:border-slate-300'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
+            box.innerHTML = `<div class="mb-8 flex justify-between items-center"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${q.category}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed ql-editor px-0 font-medium">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner':'border-slate-100 bg-white hover:border-slate-300'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
             document.getElementById('btn-prev').disabled = currentIdx === 0; document.getElementById('btn-next').innerText = currentIdx === examQuestions.length - 1 ? "FINISH & SUBMIT" : "LANJUTKAN";
         }
 
         function selectAnswer(ans) { studentAnswers[currentIdx] = ans; renderQuestion(); }
         function changeQuestion(s) { if(s === 1 && currentIdx === examQuestions.length - 1) return finishExam(); currentIdx += s; renderQuestion(); }
-        async function finishExam() { customConfirm("Selesaikan ujian dan kirim jawaban?", async () => { await autoFinishExam(); }, "Kirim"); }
+        async function finishExam() { customConfirm("Kirim jawaban?", async () => { await autoFinishExam(); }, "Kirim"); }
 
         async function autoFinishExam() {
             if(examTimer) clearInterval(examTimer); setLoading(true);
@@ -932,9 +871,9 @@
             const score = Math.round((correct / examQuestions.length) * 990);
             try {
                 await _sb.from('scores').insert([{ user_id: currentUser.id, student_name: profileData.full_name, total_score: score, meeting_number: currentMeeting }]);
-                notify(`Selesai! Skor Anda: ${score}`); document.getElementById('view-exam').classList.add('hidden'); setupDashboard(profileData.full_name, profileData.username);
+                notify(`Skor: ${score}`); document.getElementById('view-exam').classList.add('hidden'); setupDashboard(profileData.full_name, profileData.username);
                 examQuestions = []; studentAnswers = []; currentIdx = 0;
-            } catch (err) { notify("Error!", "error"); } finally { setLoading(false); }
+            } catch (err) { notify("Gagal!", "error"); } finally { setLoading(false); }
         }
 
         function switchAdminTab(tab) {
@@ -943,32 +882,16 @@
         }
 
         window.processPastedJSON = async () => {
-            let raw = document.getElementById('import-json-textarea').value.trim(); 
-            if(!raw) return notify("Tempelkan JSON!", "error");
-            
+            let raw = document.getElementById('import-json-textarea').value.trim(); if(!raw) return notify("Isi JSON!", "error");
             setLoading(true);
             try {
                 raw = raw.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
                 const json = JSON.parse(raw);
-                if (!Array.isArray(json)) throw new Error("JSON harus berupa array.");
-
-                // Map sort_order berdasarkan urutan array JSON
-                const itemsToInsert = json.map((q, index) => ({ 
-                    ...q, 
-                    meeting_number: q.meeting_number || 1, 
-                    question_text: q.question_text || "Teks soal kosong",
-                    sort_order: index 
-                }));
-
+                const itemsToInsert = json.map((q, index) => ({ ...q, meeting_number: q.meeting_number || 1, question_text: q.question_text || "Teks soal kosong", sort_order: index }));
                 const { error } = await _sb.from('questions').insert(itemsToInsert);
-                
                 if (error) throw error;
-                notify(`Impor ${json.length} soal berhasil!`); 
-                closeImportModal(); 
-                loadQuestionData();
-            } catch (err) { 
-                notify("Format JSON tidak valid!", "error"); 
-            } finally { setLoading(false); }
+                notify(`Impor ${json.length} soal berhasil!`); closeImportModal(); loadQuestionData();
+            } catch (err) { notify("Gagal!", "error"); } finally { setLoading(false); }
         };
     </script>
 </body>
