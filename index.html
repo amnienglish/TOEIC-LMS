@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC LMS</title>
+    <!-- Tailwind CSS untuk Desain -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Lucide Icons untuk Ikon -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Quill.js untuk Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <!-- SortableJS untuk Drag and Drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #F8F9F4; 
+        }
+
+        .pastel-sage { background-color: #6B8E7E; } 
+        .pastel-sage-light { background-color: #DDE5B6; }
+        .pastel-rose { background-color: #FCE4E4; }
+        .pastel-yellow { background-color: #FEFAE0; }
+        
+        .text-sage-dark { color: #2D3A35; }
+
+        .btn-primary {
+            background-color: #6B8E7E;
+            color: white;
+            transition: all 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #557264;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(107, 142, 126, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: #DDE5B6;
+            color: #4F5B1E;
+            transition: all 0.2s ease;
+        }
+
+        .card-shadow {
+            box-shadow: 0 10px 30px -5px rgba(45, 58, 53, 0.08);
+        }
+
+        .hidden { display: none; }
+
+        /* Animasi */
+        @keyframes slideIn { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes modalBounce { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .animate-toast { animation: slideIn 0.3s ease-out forwards; }
+        .animate-modal { animation: modalBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+        .editor-box { height: 150px; background: #f9fafb; border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem; }
+        .ql-toolbar { border-top-left-radius: 1rem; border-top-right-radius: 1rem; background: #fff; }
+
+        .passage-content {
+            line-height: 1.8;
+            font-size: 1.05rem;
+            color: #334155;
+        }
+        .passage-content p { margin-bottom: 1rem; }
+        .passage-content strong { color: #1e293b; }
+
+        .timer-warning {
+            color: #ef4444 !important;
+            border-color: #fca5a5 !important;
+            background-color: #fef2f2 !important;
+            animation: pulse 1s infinite;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #e2e8f0;
+            transition: .4s; border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #6B8E7E; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        /* Drag and Drop Styles */
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: #f1f5f9 !important;
+        }
+        .drag-handle {
+            cursor: grab;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen relative">
+
+    <!-- NOTIFICATION SYSTEM -->
+    <div id="notification-container" class="fixed top-5 right-5 left-5 md:left-auto md:w-80 z-[250] space-y-3"></div>
+
+    <!-- CUSTOM CONFIRMATION MODAL -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] card-shadow p-8 text-center animate-modal">
+            <div class="pastel-rose w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="alert-triangle" class="text-rose-600 w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-sage-dark mb-2">Konfirmasi</h3>
+            <p id="confirm-message" class="text-slate-500 text-sm mb-8 leading-relaxed">Apakah Anda yakin?</p>
+            <div class="flex gap-3">
+                <button id="confirm-cancel-btn" class="flex-1 bg-slate-100 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition">Batal</button>
+                <button id="confirm-ok-btn" class="flex-1 bg-rose-500 py-3 rounded-xl font-bold text-white hover:bg-rose-600 transition">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT JSON MODAL -->
+    <div id="import-json-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] card-shadow p-8 animate-modal">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-extrabold text-sage-dark">Tempel Kode JSON</h3>
+                <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
+            </div>
+            <p class="text-slate-500 text-sm mb-4 leading-relaxed">Tempelkan data JSON soal (format Array) di kotak bawah ini.</p>
+            <textarea id="import-json-textarea" class="w-full h-64 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-sage outline-none mb-6" placeholder='[ { "question_text": "...", "option_a": "...", "meeting_number": 1, ... } ]'></textarea>
+            <div class="flex gap-3">
+                <button onclick="closeImportModal()" class="flex-1 bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-200 transition uppercase tracking-wider text-xs">Batal</button>
+                <button onclick="processPastedJSON()" class="flex-1 btn-primary py-4 rounded-2xl font-black shadow-lg uppercase tracking-wider text-xs transition active:scale-95">Impor Sekarang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT SCORE MODAL -->
+    <div id="edit-score-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] card-shadow p-8 animate-modal">
+            <h3 class="text-2xl font-extrabold text-sage-dark mb-6">Edit Skor Ujian</h3>
+            <div class="space-y-4">
+                <input type="hidden" id="edit-score-id">
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Nama Mahasiswa</p>
+                    <p id="edit-score-name-label" class="font-bold text-slate-700">-</p>
+                </div>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Pertemuan</p>
+                    <p id="edit-score-meeting-label" class="font-bold text-slate-700">-</p>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Nilai / Skor (0-990)</label>
+                    <input type="number" id="edit-score-input" min="0" max="990" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-sage font-black text-2xl text-center">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeEditScoreModal()" class="flex-1 bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-200 transition">Batal</button>
+                    <button onclick="handleUpdateScore()" class="flex-1 btn-primary py-4 rounded-2xl font-black shadow-lg">Update Skor</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
+    <nav class="pastel-sage text-white px-6 py-4 flex justify-between items-center sticky top-0 z-50 shadow-md">
+        <div class="flex items-center gap-2">
+            <i data-lucide="book-open-check"></i>
+            <span class="font-extrabold text-xl tracking-tight uppercase">TOEIC LMS</span>
+        </div>
+        <div id="nav-user-info" class="hidden flex items-center gap-4">
+            <span id="display-user-name" class="text-sm font-bold bg-white/20 px-4 py-1.5 rounded-full"></span>
+            <button onclick="logout()" class="bg-[#C06C6C] hover:bg-[#A65454] px-4 py-1.5 rounded-full text-xs font-bold transition shadow-sm">Keluar</button>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-4 md:p-8">
+        
+        <!-- 1. AUTH SECTION -->
+        <section id="view-auth" class="max-w-md mx-auto mt-12">
+            <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
+                <div id="form-login">
+                    <div class="text-center mb-10">
+                        <div class="pastel-sage-light w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-inner">
+                            <i data-lucide="user-check" class="text-sage-dark w-10 h-10"></i>
+                        </div>
+                        <h2 class="text-3xl font-extrabold text-sage-dark">Masuk Akun</h2>
+                    </div>
+                    <div class="space-y-6">
+                        <input type="text" id="login-id" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#6B8E7E] outline-none transition font-medium" placeholder="Username / Email">
+                        <input type="password" id="login-pass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#6B8E7E] outline-none transition font-medium" placeholder="Password">
+                        <button onclick="handleLogin()" class="w-full btn-primary py-4 rounded-2xl font-black text-lg shadow-lg mt-2 tracking-widest uppercase">Masuk</button>
+                    </div>
+                    <p class="text-center mt-10 text-sm text-slate-600 font-semibold">
+                        Belum punya akun? <button onclick="toggleAuth(true)" class="text-[#6B8E7E] font-extrabold hover:underline">Daftar Akun</button>
+                    </p>
+                </div>
+
+                <div id="form-register" class="hidden">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-extrabold text-sage-dark">Registrasi</h2>
+                    </div>
+                    <div class="space-y-4">
+                        <input type="text" id="reg-username" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E]" placeholder="Username">
+                        <input type="text" id="reg-name" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E]" placeholder="Nama Lengkap">
+                        <input type="email" id="reg-email" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E]" placeholder="Email">
+                        <input type="password" id="reg-pass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E]" placeholder="Password">
+                        <button onclick="handleRegister()" class="w-full bg-[#8A9A5B] hover:bg-[#6B7A42] text-white py-4 rounded-2xl font-black text-lg shadow-lg transition mt-4 uppercase">Daftar Sekarang</button>
+                    </div>
+                    <p class="text-center mt-8 text-sm text-slate-600 font-semibold">
+                        Sudah punya akun? <button onclick="toggleAuth(false)" class="text-[#6B8E7E] font-extrabold hover:underline">Login</button>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. STUDENT DASHBOARD -->
+        <section id="view-student" class="hidden animate-fade-in space-y-8">
+            <div class="pastel-sage p-12 rounded-[3rem] text-white shadow-xl relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="text-4xl font-black mb-3 text-white">Halo, <span id="student-name-display">Mahasiswa</span>! 👋</h2>
+                    <p class="text-lg opacity-90 font-medium">Username: <span id="student-username-display" class="font-bold underline tracking-wide">@user</span></p>
+                </div>
+                <i data-lucide="book" class="absolute right-[-20px] bottom-[-20px] w-64 h-64 opacity-10 rotate-12"></i>
+            </div>
+
+            <!-- Grid Pertemuan -->
+            <div>
+                <h3 class="font-black text-xl mb-6 flex items-center gap-3 text-sage-dark">
+                    <span class="p-2.5 pastel-sage-light rounded-xl"><i data-lucide="layout-grid" class="w-6 h-6 text-sage-dark"></i></span>
+                    Daftar Pertemuan
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4" id="meetings-grid"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Riwayat Skor -->
+                <div class="md:col-span-2 bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100 h-fit">
+                    <h3 class="font-black text-xl mb-6 flex items-center gap-3 text-sage-dark">
+                        <span class="p-2.5 pastel-sage-light rounded-xl"><i data-lucide="award" class="w-6 h-6 text-sage-dark"></i></span>
+                        Riwayat Skor Anda
+                    </h3>
+                    <div id="student-scores-list" class="space-y-4"></div>
+                </div>
+
+                <!-- Legend Skor TOEIC -->
+                <div class="bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100 border-t-4 border-t-yellow-400 h-fit text-xs">
+                    <h4 class="font-black text-sm uppercase tracking-widest text-slate-400 mb-6">Panduan Skor TOEIC</h4>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-yellow-50 text-yellow-800"><span class="w-3 h-3 rounded-full bg-yellow-400"></span><div class="flex-1"><p class="font-black">785 - 990 (Gold)</p><p class="opacity-70">Professional Proficiency</p></div></div>
+                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-blue-50 text-blue-800"><span class="w-3 h-3 rounded-full bg-blue-400"></span><div class="flex-1"><p class="font-black">605 - 780 (Blue)</p><p class="opacity-70">Working Proficiency</p></div></div>
+                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-green-50 text-green-800"><span class="w-3 h-3 rounded-full bg-green-400"></span><div class="flex-1"><p class="font-black">405 - 600 (Green)</p><p class="opacity-70">Intermediate Proficiency</p></div></div>
+                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-amber-50 text-amber-800"><span class="w-3 h-3 rounded-full bg-amber-600"></span><div class="flex-1"><p class="font-black">255 - 400 (Brown)</p><p class="opacity-70">Elementary Proficiency</p></div></div>
+                        <div class="flex items-center gap-3 p-3 rounded-2xl bg-orange-50 text-orange-800"><span class="w-3 h-3 rounded-full bg-orange-400"></span><div class="flex-1"><p class="font-black">10 - 250 (Orange)</p><p class="opacity-70">Basic Proficiency</p></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. EXAM INTERFACE -->
+        <section id="view-exam" class="hidden max-w-5xl mx-auto pb-20">
+            <div class="bg-white rounded-[3rem] card-shadow overflow-hidden border border-slate-200">
+                <div class="pastel-sage p-7 text-white flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shadow-inner">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div>
+                            <p id="exam-mode-label" class="text-[10px] font-black uppercase tracking-widest opacity-70">Timer Aktif</p>
+                            <span id="exam-title" class="font-extrabold text-xl">TOEIC Practice</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span id="exam-timer" class="bg-white/20 px-6 py-2.5 rounded-2xl text-lg font-mono font-black border border-white/30 tracking-widest min-w-[100px] text-center">00:00</span>
+                        <p id="dynamic-time-info" class="text-[9px] font-bold uppercase mt-1 opacity-70 tracking-tighter">Waktu Menyesuaikan</p>
+                    </div>
+                </div>
+                <div id="exam-container" class="p-8 md:p-12">
+                    <div id="current-question-box" class="ql-snow"></div>
+                    <div class="mt-14 flex justify-between items-center gap-6">
+                        <button id="btn-prev" onclick="changeQuestion(-1)" class="px-10 py-4 rounded-2xl font-black text-slate-400 hover:text-sage-dark hover:bg-slate-50 transition-all disabled:opacity-20 uppercase tracking-widest text-xs">Kembali</button>
+                        <button id="btn-next" onclick="changeQuestion(1)" class="btn-primary px-16 py-4 rounded-2xl font-black text-lg shadow-xl uppercase tracking-widest transition active:scale-95">Lanjutkan</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. ADMIN DASHBOARD -->
+        <section id="view-admin" class="hidden">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div>
+                    <h2 class="text-4xl font-black text-sage-dark mb-2 tracking-tight">Dashboard Dosen</h2>
+                    <p class="text-slate-500 font-bold">Manajemen Mahasiswa & Kurikulum</p>
+                </div>
+                <div class="flex p-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <button onclick="switchAdminTab('students')" id="tab-btn-students" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all bg-[#6B8E7E] text-white shadow-lg">MAHASISWA</button>
+                    <button onclick="switchAdminTab('scores')" id="tab-btn-scores" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">HASIL UJIAN</button>
+                    <button onclick="switchAdminTab('questions')" id="tab-btn-questions" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">BANK SOAL</button>
+                    <button onclick="switchAdminTab('locks')" id="tab-btn-locks" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">KONTROL KELAS</button>
+                </div>
+            </div>
+
+            <!-- Tab Kontrol Kelas -->
+            <div id="admin-tab-locks" class="hidden space-y-6">
+                <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
+                    <h3 class="font-black text-2xl text-sage-dark mb-8 flex items-center gap-3">
+                        <i data-lucide="settings-2"></i> Pengaturan Akses Pertemuan
+                    </h3>
+                    <p class="text-sm text-slate-500 mb-8 italic">Geser sakelar ke kanan untuk membuka pertemuan bagi mahasiswa.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="admin-locks-grid"></div>
+                </div>
+            </div>
+
+            <!-- Tab Mahasiswa -->
+            <div id="admin-tab-students" class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-x-auto">
+                <table class="w-full text-left min-w-[700px]">
+                    <thead class="bg-slate-50 border-b-2 border-slate-100">
+                        <tr>
+                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Username</th>
+                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Nama Mahasiswa</th>
+                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Skor Tertinggi</th>
+                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-students" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+
+            <!-- Tab Hasil Ujian -->
+            <div id="admin-tab-scores" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 card-shadow flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 pastel-sage rounded-xl text-white"><i data-lucide="filter" class="w-5 h-5"></i></div>
+                        <h4 class="font-black text-sage-dark uppercase tracking-widest text-xs">Filter Hasil</h4>
+                    </div>
+                    <select id="admin-score-meeting-filter" onchange="loadScoreData()" class="w-full md:w-64 p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-sage font-bold"></select>
+                </div>
+                <div class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-x-auto">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 border-b-2 border-slate-100">
+                            <tr>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Waktu Pengerjaan</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Prtm</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Mahasiswa</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Skor & Level</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-all-scores" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Soal -->
+            <div id="admin-tab-questions" class="hidden space-y-8">
+                <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
+                    <div class="flex justify-between items-start mb-8">
+                        <h3 id="form-question-title" class="font-black text-2xl text-sage-dark">Tambah Soal Baru</h3>
+                        <button onclick="openImportModal()" class="btn-secondary px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition active:scale-95">
+                             <i data-lucide="file-up" class="w-4 h-4"></i> Import JSON
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="hidden" id="q-edit-id">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Pertemuan (1-16)</label>
+                            <select id="q-meeting" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold"></select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Teks Bacaan (Passage)</label>
+                            <div id="passage-editor-container" class="editor-box"></div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Teks Pertanyaan</label>
+                            <div id="question-editor-container" class="editor-box"></div>
+                        </div>
+                        <input type="text" id="q-opt-a" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi A">
+                        <input type="text" id="q-opt-b" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi B">
+                        <input type="text" id="q-opt-c" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi C">
+                        <input type="text" id="q-opt-d" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi D">
+                        <select id="q-correct" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-sage">
+                            <option value="A">Jawaban A</option><option value="B">Jawaban B</option>
+                            <option value="C">Jawaban C</option><option value="D">Jawaban D</option>
+                        </select>
+                        <select id="q-cat" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-sage">
+                            <option value="Listening">Listening</option><option value="Reading">Reading</option>
+                        </select>
+                        <div class="md:col-span-2 grid grid-cols-2 gap-4">
+                            <div class="p-4 border rounded-2xl bg-slate-50">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Audio (.mp3)</label>
+                                <input type="file" id="q-audio-file" accept="audio/*" class="w-full text-xs">
+                            </div>
+                            <div class="p-4 border rounded-2xl bg-slate-50">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Gambar (.jpg/png)</label>
+                                <input type="file" id="q-image-file" accept="image/*" class="w-full text-xs">
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 flex gap-3">
+                             <button id="btn-save-question" onclick="handleSaveQuestion()" class="flex-1 btn-primary py-4 rounded-2xl font-black text-lg shadow-lg uppercase tracking-wider">Simpan Soal</button>
+                             <button id="btn-cancel-edit" onclick="resetQuestionForm()" class="hidden bg-slate-100 px-8 rounded-2xl font-bold text-slate-400 uppercase tracking-wider">Batal</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-hidden">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 border-b-2 border-slate-100">
+                            <tr>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center w-12"></th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Pertm.</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Kategori</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Soal</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-questions" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+                <!-- Tombol Simpan Urutan -->
+                <div id="save-order-container" class="hidden sticky bottom-6 flex justify-center">
+                    <button onclick="saveManualOrder()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl flex items-center gap-3 hover:bg-indigo-700 transition transform active:scale-95">
+                        <i data-lucide="save" class="w-5 h-5"></i> SIMPAN PERUBAHAN URUTAN SOAL
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- EDIT STUDENT MODAL -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] card-shadow p-8 animate-modal">
+            <h3 class="text-2xl font-extrabold text-sage-dark mb-6">Edit Profil Mahasiswa</h3>
+            <div class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Username</label>
+                    <input type="text" id="edit-username" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Nama Lengkap</label>
+                    <input type="text" id="edit-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Email</label>
+                    <input type="email" id="edit-email" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeEditModal()" class="flex-1 bg-slate-100 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition">Batal</button>
+                    <button onclick="handleUpdateStudent()" class="flex-1 btn-primary py-3 rounded-xl font-bold">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOADER -->
+    <div id="loader" class="hidden fixed inset-0 bg-white/95 flex flex-col items-center justify-center z-[500]">
+        <div class="animate-spin rounded-full h-20 w-20 border-8 border-slate-100 border-t-[#6B8E7E]"></div>
+        <p class="text-sm font-black text-sage-dark mt-6 tracking-[0.3em] uppercase animate-pulse">Memproses...</p>
+    </div>
+
+    <script>
+        const SB_URL = "https://nzrrqahkwggtqlviuoth.supabase.co";
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56cnJxYWhrd2dndHFsdml1b3RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjA0NjEsImV4cCI6MjA4NzkzNjQ2MX0.a2GglJ311PEGV7kWk7vNBU1FCHlUlurgEddxlwqA0FQ";
+        const _sb = supabase.createClient(SB_URL, SB_KEY);
+
+        let currentUser = null, profileData = null, examQuestions = [], currentIdx = 0, studentAnswers = [];
+        let qEditor = null, pEditor = null; 
+        let examTimer = null, timeLeft = 0, currentMeeting = 1;
+        let meetingLocks = {}; // State untuk status buka/tutup pertemuan
+        let currentQuestionsRaw = []; // Simpan data soal untuk menghindari masalah kutipan di HTML
+        let sortableInstance = null;
+
+        // --- GLOBAL UI HELPERS ---
+        function refreshIcons() { 
+            if (typeof lucide !== 'undefined' && lucide.createIcons) { 
+                lucide.createIcons(); 
+            } 
+        }
+
+        let onConfirmCallback = null;
+        window.customConfirm = function(message, callback, okText = "Ya, Lanjutkan") {
+            document.getElementById('confirm-message').innerText = message;
+            document.getElementById('confirm-ok-btn').innerText = okText;
+            document.getElementById('confirm-modal').classList.remove('hidden');
+            onConfirmCallback = callback;
+        };
+
+        document.getElementById('confirm-cancel-btn').onclick = () => document.getElementById('confirm-modal').classList.add('hidden');
+        document.getElementById('confirm-ok-btn').onclick = () => { if(onConfirmCallback) onConfirmCallback(); document.getElementById('confirm-modal').classList.add('hidden'); };
+
+        window.openImportModal = () => {
+            document.getElementById('import-json-textarea').value = '';
+            document.getElementById('import-json-modal').classList.remove('hidden');
+        };
+        window.closeImportModal = () => document.getElementById('import-json-modal').classList.add('hidden');
+
+        function notify(message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            const toast = document.createElement('div');
+            toast.className = `${type==='success'?'bg-[#6B8E7E]':'bg-[#C06C6C]'} text-white p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-toast`;
+            toast.innerHTML = `<i data-lucide="${type==='success'?'check-circle':'alert-circle'}" class="w-5 h-5"></i><span class="font-bold text-sm">${message}</span>`;
+            container.appendChild(toast); refreshIcons();
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 4000);
+        }
+
+        function setLoading(v) { document.getElementById('loader').classList.toggle('hidden', !v); }
+
+        function getToeicLevel(score) {
+            if (score >= 785) return { label: 'Gold', color: 'bg-yellow-100 text-yellow-700', full: 'Professional Proficiency' };
+            if (score >= 605) return { label: 'Blue', color: 'bg-blue-100 text-blue-700', full: 'Working Proficiency' };
+            if (score >= 405) return { label: 'Green', color: 'bg-green-100 text-green-700', full: 'Intermediate Proficiency' };
+            if (score >= 255) return { label: 'Brown', color: 'bg-amber-100 text-amber-700', full: 'Elementary Proficiency' };
+            return { label: 'Orange', color: 'bg-orange-100 text-orange-700', full: 'Basic Proficiency' };
+        }
+
+        // --- MEETING LOCK FUNCTIONS ---
+        async function fetchMeetingLocks() {
+            const { data, error } = await _sb.from('meeting_locks').select('*').order('meeting_number', { ascending: true });
+            if (data) {
+                data.forEach(item => meetingLocks[item.meeting_number] = item.is_open);
+                if (currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin')) renderAdminLocks();
+                generateMeetingsGrid();
+            }
+        }
+
+        async function toggleMeetingLock(no, status) {
+            setLoading(true);
+            const { error } = await _sb.from('meeting_locks').update({ is_open: status }).eq('meeting_number', no);
+            setLoading(false);
+            if (!error) {
+                meetingLocks[no] = status;
+                notify(`Pertemuan ${no} sekarang ${status ? 'DIBUKA' : 'DITUTUP'}`);
+                generateMeetingsGrid();
+            }
+        }
+
+        function renderAdminLocks() {
+            const grid = document.getElementById('admin-locks-grid'); if(!grid) return;
+            grid.innerHTML = '';
+            for(let i=1; i<=16; i++) {
+                const isOpen = meetingLocks[i] || false;
+                grid.innerHTML += `
+                    <div class="flex items-center justify-between p-5 bg-slate-50 rounded-3xl border-2 border-slate-100 transition-all hover:bg-white hover:border-sage group">
+                        <span class="font-black text-slate-400 group-hover:text-sage transition-colors">#${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</span>
+                        <label class="switch">
+                            <input type="checkbox" ${isOpen ? 'checked' : ''} onchange="toggleMeetingLock(${i}, this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>`;
+            }
+        }
+
+        // --- GLOBAL ACTION FUNCTIONS ---
+        window.deleteQuestion = (id) => customConfirm("Apakah Anda yakin ingin menghapus soal ini?", async () => {
+            setLoading(true); await _sb.from('questions').delete().eq('id', id); setLoading(false);
+            notify("Soal telah dihapus."); loadQuestionData();
+        });
+
+        window.editQuestionByIndex = (index) => {
+            const q = currentQuestionsRaw[index];
+            if (!q) return;
+
+            document.getElementById('form-question-title').innerText = 'Edit Data Soal';
+            document.getElementById('q-edit-id').value = q.id;
+            
+            qEditor.root.innerHTML = q.question_text || '';
+            pEditor.root.innerHTML = q.passage_text || '';
+            
+            document.getElementById('q-opt-a').value = q.option_a || '';
+            document.getElementById('q-opt-b').value = q.option_b || '';
+            document.getElementById('q-opt-c').value = q.option_c || '';
+            document.getElementById('q-opt-d').value = q.option_d || '';
+            document.getElementById('q-correct').value = q.correct_answer || 'A';
+            document.getElementById('q-cat').value = q.category || 'Listening';
+            document.getElementById('q-meeting').value = q.meeting_number || 1;
+            
+            document.getElementById('btn-save-question').innerText = "Update Data Soal";
+            document.getElementById('btn-cancel-edit').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deleteStudent = (id) => customConfirm("Hapus akun mahasiswa ini secara permanen?", async () => {
+            setLoading(true); await _sb.from('profiles').delete().eq('id', id); setLoading(false);
+            notify("Mahasiswa dihapus."); loadAdminData();
+        });
+
+        window.deleteScore = (id) => customConfirm("Hapus rekaman skor ini?", async () => {
+            setLoading(true); await _sb.from('scores').delete().eq('id', id); setLoading(false);
+            notify("Skor dihapus."); loadScoreData(); loadAdminData();
+        });
+
+        window.openEditMhsModal = (id, username, name, email) => {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-username').value = username;
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-email').value = email || '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        };
+
+        window.openEditScoreModal = (id, name, meeting, score) => {
+            document.getElementById('edit-score-id').value = id;
+            document.getElementById('edit-score-name-label').innerText = name;
+            document.getElementById('edit-score-meeting-label').innerText = "Pertemuan " + meeting;
+            document.getElementById('edit-score-input').value = score;
+            document.getElementById('edit-score-modal').classList.remove('hidden');
+        };
+
+        window.closeEditScoreModal = () => document.getElementById('edit-score-modal').classList.add('hidden');
+
+        window.handleUpdateScore = async () => {
+            const id = document.getElementById('edit-score-id').value;
+            const newScore = parseInt(document.getElementById('edit-score-input').value);
+            if (isNaN(newScore) || newScore < 0 || newScore > 990) return notify("Nilai harus 0-990", "error");
+            setLoading(true);
+            try {
+                await _sb.from('scores').update({ total_score: newScore }).eq('id', id);
+                notify("Skor diperbarui!"); closeEditScoreModal(); loadScoreData(); loadAdminData();
+            } catch (err) { notify("Error!", "error"); } finally { setLoading(false); }
+        };
+
+        // --- APP FLOW ---
+        window.onload = () => {
+            refreshIcons();
+            const meetingSel = document.getElementById('q-meeting');
+            const scoreFilter = document.getElementById('admin-score-meeting-filter');
+            if(meetingSel) {
+                meetingSel.innerHTML = "";
+                for(let i=1; i<=16; i++) meetingSel.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`;
+            }
+            if(scoreFilter) {
+                scoreFilter.innerHTML = '<option value="all">Semua Pertemuan</option>';
+                for(let i=1; i<=16; i++) scoreFilter.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`;
+            }
+            const quillOptions = { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } };
+            pEditor = new Quill('#passage-editor-container', quillOptions);
+            qEditor = new Quill('#question-editor-container', quillOptions);
+            
+            _sb.auth.onAuthStateChange((event, session) => {
+              if (session) {
+                currentUser = session.user;
+                fetchProfileAndShow(currentUser.id);
+              } else {
+                currentUser = null;
+                document.getElementById('view-auth').classList.remove('hidden');
+                document.getElementById('nav-user-info').classList.add('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
+                document.getElementById('view-student').classList.add('hidden');
+              }
+            });
+            fetchMeetingLocks();
+        };
+
+        function generateMeetingsGrid() {
+            const grid = document.getElementById('meetings-grid'); if(!grid) return;
+            grid.innerHTML = '';
+            for(let i=1; i<=16; i++) {
+                const isOpen = meetingLocks[i] || (currentUser && (currentUser.role === 'admin' || currentUser.username === 'admin'));
+                const isExam = (i === 8 || i === 16);
+                
+                grid.innerHTML += `
+                    <button onclick="${isOpen ? `startExam(${i})` : `notify('Pertemuan ini masih dikunci oleh dosen.', 'error')`}" 
+                            class="group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${isOpen ? 'border-slate-100 hover:border-sage cursor-pointer' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'}">
+                        <div class="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${isOpen ? (isExam ? 'bg-rose-50 text-rose-500' : 'bg-sage-light text-sage-dark') : 'bg-slate-200 text-slate-400'}">
+                            <i data-lucide="${!isOpen ? 'lock' : (isExam ? 'award' : 'book-text')}" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-[10px] font-black uppercase text-slate-400 ${isOpen ? 'group-hover:text-sage' : ''}">Meeting ${i}</p>
+                        <p class="text-xs font-bold ${isOpen ? 'text-slate-800' : 'text-slate-400'}">${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}</p>
+                    </button>`;
+            }
+            refreshIcons();
+        }
+
+        async function fetchProfileAndShow(uid) {
+            const { data } = await _sb.from('profiles').select('*').eq('id', uid).single();
+            if (data) { 
+                profileData = data; 
+                if(!currentUser) currentUser = { id: uid };
+                currentUser.role = data.role; 
+                currentUser.username = data.username; 
+                setupDashboard(data.full_name, data.username); 
+            }
+        }
+
+        function setupDashboard(name, username) {
+            const navName = document.getElementById('display-user-name'); if(navName) navName.innerText = name;
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('nav-user-info').classList.remove('hidden');
+            if(currentUser.role === 'admin' || username === 'admin') {
+                document.getElementById('view-admin').classList.remove('hidden');
+                document.getElementById('view-student').classList.add('hidden');
+                loadAdminData(); loadScoreData(); loadQuestionData(); fetchMeetingLocks();
+            } else {
+                document.getElementById('view-student').classList.remove('hidden');
+                document.getElementById('view-admin').classList.add('hidden');
+                if(document.getElementById('student-name-display')) document.getElementById('student-name-display').innerText = name.split(' ')[0];
+                if(document.getElementById('student-username-display')) document.getElementById('student-username-display').innerText = "@" + username;
+                loadStudentScores(); fetchMeetingLocks();
+            }
+        }
+
+        async function handleLogin() {
+            const idInput = document.getElementById('login-id').value.trim(), pass = document.getElementById('login-pass').value;
+            if(idInput === 'admin' && pass === 'guru123') { currentUser = { email: 'Admin', role: 'admin', username: 'admin' }; setupDashboard('Admin Dosen', 'admin'); return; }
+            setLoading(true);
+            let email = idInput;
+            if(!idInput.includes('@')) {
+                const { data } = await _sb.from('profiles').select('email').eq('username', idInput).maybeSingle();
+                if(!data) { setLoading(false); return notify("Username tidak ditemukan!", "error"); }
+                email = data.email;
+            }
+            const { error } = await _sb.auth.signInWithPassword({ email: email, password: pass });
+            setLoading(false);
+            if(error) return notify("Login Gagal!", "error");
+        }
+
+        async function handleRegister() {
+            const u = document.getElementById('reg-username').value.trim(), e = document.getElementById('reg-email').value.trim(), p = document.getElementById('reg-pass').value, n = document.getElementById('reg-name').value;
+            if(!u || !e || !p || !n) return notify("Lengkapi data!", "error");
+            setLoading(true);
+            const { data: auth, error } = await _sb.auth.signUp({ email: e, password: p, options: { data: { full_name: n } } });
+            if(error) { setLoading(false); return notify(error.message, "error"); }
+            await _sb.from('profiles').insert([{ id: auth.user.id, username: u, full_name: n, email: e, role: 'mahasiswa' }]);
+            setLoading(false); notify("Registrasi Berhasil!"); toggleAuth(false);
+        }
+
+        async function logout() { await _sb.auth.signOut(); location.reload(); }
+
+        async function loadAdminData() {
+            const { data: std } = await _sb.from('profiles').select('*'), { data: scr } = await _sb.from('scores').select('*');
+            const body = document.getElementById('table-students'); if(!body) return;
+            body.innerHTML = '';
+            std?.filter(s => s.role !== 'admin' && s.username !== 'admin').forEach(s => {
+                const sScores = scr?.filter(sc => sc.user_id === s.id).sort((a,b) => b.total_score - a.total_score);
+                const best = (sScores && sScores.length > 0) ? sScores[0].total_score : '0';
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4"></i></button></td></tr>`;
+            });
+            refreshIcons();
+        }
+
+        async function loadQuestionData() {
+            const { data } = await _sb.from('questions').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+            const body = document.getElementById('table-questions'); if(!body) return;
+            body.innerHTML = '';
+            currentQuestionsRaw = data || []; 
+            
+            currentQuestionsRaw.forEach((q, index) => {
+                const cleanText = (q.question_text || "").replace(/<[^>]*>?/gm, '').replace(/'/g, "").substring(0, 50) + "...";
+                body.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors" data-id="${q.id}">
+                        <td class="p-4 text-center">
+                            <div class="drag-handle text-slate-300 hover:text-indigo-500 transition">
+                                <i data-lucide="grip-vertical"></i>
+                            </div>
+                        </td>
+                        <td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td>
+                        <td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td>
+                        <td class="p-6 text-sm text-slate-500 max-w-xs truncate font-medium">${cleanText}</td>
+                        <td class="p-6 text-right flex justify-end gap-3">
+                            <button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 hover:bg-rose-50 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>`;
+            });
+            refreshIcons();
+            initDragAndDrop();
+        }
+
+        function initDragAndDrop() {
+            const el = document.getElementById('table-questions');
+            if (!el) return;
+            
+            if (sortableInstance) sortableInstance.destroy();
+
+            sortableInstance = new Sortable(el, {
+                handle: '.drag-handle',
+                animation: 250,
+                ghostClass: 'sortable-ghost',
+                onEnd: function() {
+                    document.getElementById('save-order-container').classList.remove('hidden');
+                    notify("Urutan soal diubah. Klik 'SIMPAN' di bawah untuk menyimpan permanen.", "success");
+                }
+            });
+        }
+
+        async function saveManualOrder() {
+            setLoading(true);
+            const rows = document.querySelectorAll('#table-questions tr');
+            const updates = [];
+            
+            rows.forEach((row, index) => {
+                const id = row.getAttribute('data-id');
+                updates.push({ id, sort_order: index });
+            });
+
+            // Lakukan update satu per satu (karena Supabase upsert butuh key unik yang lengkap)
+            try {
+                for (let upd of updates) {
+                    await _sb.from('questions').update({ sort_order: upd.sort_order }).eq('id', upd.id);
+                }
+                notify("Urutan soal berhasil disimpan secara permanen!");
+                document.getElementById('save-order-container').classList.add('hidden');
+                loadQuestionData();
+            } catch (err) {
+                notify("Gagal menyimpan urutan!", "error");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function handleSaveQuestion() {
+            const editId = document.getElementById('q-edit-id').value;
+            const qData = {
+                question_text: qEditor.root.innerHTML,
+                passage_text: pEditor.getText().trim() !== "" ? pEditor.root.innerHTML : null,
+                option_a: document.getElementById('q-opt-a').value, option_b: document.getElementById('q-opt-b').value,
+                option_c: document.getElementById('q-opt-c').value, option_d: document.getElementById('q-opt-d').value,
+                correct_answer: document.getElementById('q-correct').value, category: document.getElementById('q-cat').value,
+                meeting_number: parseInt(document.getElementById('q-meeting').value)
+            };
+            
+            if(qEditor.getText().trim()==="" || !qData.option_a) return notify("Lengkapi teks soal!", "error");
+            setLoading(true);
+            try {
+                const aud = document.getElementById('q-audio-file').files[0], img = document.getElementById('q-image-file').files[0];
+                if(aud) { const fn = `aud_${Date.now()}`; await _sb.storage.from('audio-soal').upload(fn, aud); qData.audio_url = `${SB_URL}/storage/v1/object/public/audio-soal/${fn}`; }
+                if(img) { const fn = `img_${Date.now()}`; await _sb.storage.from('image-soal').upload(fn, img); qData.image_url = `${SB_URL}/storage/v1/object/public/image-soal/${fn}`; }
+                
+                if(editId) {
+                    await _sb.from('questions').update(qData).eq('id', editId);
+                } else {
+                    // Set sort_order ke paling akhir jika soal baru
+                    const { data: lastQ } = await _sb.from('questions').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
+                    qData.sort_order = (lastQ ? lastQ.sort_order : 0) + 1;
+                    await _sb.from('questions').insert([qData]);
+                }
+                resetQuestionForm(); loadQuestionData(); notify("Berhasil!");
+            } catch (err) { notify("Error!", "error"); } finally { setLoading(false); }
+        }
+
+        function resetQuestionForm() {
+            document.getElementById('form-question-title').innerText = 'Tambah Soal Baru';
+            document.getElementById('q-edit-id').value = ""; qEditor.setContents([]); pEditor.setContents([]);
+            ['q-opt-a','q-opt-b','q-opt-c','q-opt-d','q-audio-file','q-image-file'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+            document.getElementById('btn-save-question').innerText = "SIMPAN DATA SOAL";
+            document.getElementById('btn-cancel-edit').classList.add('hidden');
+        }
+
+        async function loadScoreData() {
+            const filterValue = document.getElementById('admin-score-meeting-filter').value;
+            setLoading(true); const { data, error } = await _sb.from('scores').select('*').order('created_at', { ascending: false });
+            setLoading(false); const body = document.getElementById('table-all-scores'); if(!body) return;
+            body.innerHTML = '';
+            const filteredData = filterValue === 'all' ? data : data.filter(sc => sc.meeting_number == filterValue);
+            if(!filteredData || filteredData.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Belum ada data.</td></tr>'; return; }
+            filteredData.forEach(sc => {
+                const ds = new Date(sc.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+                const level = getToeicLevel(sc.total_score);
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 text-xs font-bold text-slate-400">${ds}</td><td class="p-6 text-center font-black text-sage">P${sc.meeting_number||1}</td><td class="p-6 font-bold text-slate-800">${sc.student_name}</td><td class="p-6 text-center font-black text-sage-dark"><span class="text-xl">${sc.total_score}</span> <span class="ml-2 px-3 py-1 rounded-full text-[10px] uppercase font-black ${level.color}">${level.label}</span></td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditScoreModal('${sc.id}', '${sc.student_name.replace(/'/g, "\\'")}', '${sc.meeting_number||1}', '${sc.total_score}')" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteScore('${sc.id}')" class="p-3 bg-white border border-slate-200 rounded-xl text-rose-400 hover:bg-rose-50 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+            });
+            refreshIcons();
+        }
+
+        async function loadStudentScores() {
+            const { data } = await _sb.from('scores').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            const list = document.getElementById('student-scores-list'); if(!list) return;
+            list.innerHTML = data?.length > 0 ? data.map(s => {
+                const level = getToeicLevel(s.total_score);
+                return `<div class="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm"><div class="flex flex-col gap-1"><p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Meeting ${s.meeting_number} • ${new Date(s.created_at).toLocaleDateString()}</p><p class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full w-fit ${level.color}">${level.label} Level</p></div><div class="text-right"><span class="text-3xl font-black text-sage-dark">${s.total_score}</span><p class="text-[9px] font-bold text-slate-400 uppercase">${level.full}</p></div></div>`;
+            }).join('') : '<p class="text-center text-slate-400 italic py-8">Belum ada nilai.</p>';
+        }
+
+        async function startExam(meetingNo) {
+            setLoading(true); 
+            const { data } = await _sb.from('questions').select('*').eq('meeting_number', meetingNo).order('sort_order', { ascending: true }).order('created_at', { ascending: true }); 
+            setLoading(false);
+            if(!data || data.length === 0) return notify("Bank soal pertemuan ini kosong!", "error");
+            currentMeeting = meetingNo; examQuestions = data; studentAnswers = new Array(data.length).fill(null); currentIdx = 0;
+            let totalSeconds = 0; examQuestions.forEach(q => { totalSeconds += (q.category === 'Listening') ? 27 : 45; });
+            if(totalSeconds < 120) totalSeconds = 120;
+            const isExam = (meetingNo === 8 || meetingNo === 16);
+            document.getElementById('exam-mode-label').innerText = isExam ? "MODE UJIAN DINAMIS" : `LATIHAN PERTEMUAN ${meetingNo}`;
+            document.getElementById('exam-title').innerText = isExam ? (meetingNo === 8 ? "MID-TERM EXAM (UTS)" : "FINAL EXAM (UAS)") : "TOEIC Latihan";
+            document.getElementById('exam-timer').classList.remove('hidden', 'timer-warning');
+            startTimer(totalSeconds); document.getElementById('view-student').classList.add('hidden');
+            document.getElementById('view-exam').classList.remove('hidden'); renderQuestion();
+        }
+
+        function startTimer(duration) {
+            if(examTimer) clearInterval(examTimer); timeLeft = duration;
+            const timerDisplay = document.getElementById('exam-timer');
+            const updateUI = () => {
+                const h = Math.floor(timeLeft / 3600), m = Math.floor((timeLeft % 3600) / 60), s = timeLeft % 60;
+                let timeStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                if (h > 0) timeStr = `${String(h).padStart(2,'0')}:${timeStr}`;
+                if(timerDisplay) { timerDisplay.innerText = timeStr; if (timeLeft < 60) timerDisplay.classList.add('timer-warning'); }
+                if(timeLeft <= 0) { clearInterval(examTimer); notify("Waktu habis!", "error"); autoFinishExam(); }
+                timeLeft--;
+            };
+            updateUI(); examTimer = setInterval(updateUI, 1000);
+        }
+
+        function renderQuestion() {
+            const q = examQuestions[currentIdx], box = document.getElementById('current-question-box'); if(!box) return;
+            let m = ''; if(q.audio_url) m += `<div class="bg-slate-50 p-6 rounded-3xl mb-4 border-2"><audio controls src="${q.audio_url}" class="w-full"></audio></div>`;
+            if(q.image_url) m += `<div class="mb-6 rounded-3xl overflow-hidden border-2 shadow-sm flex justify-center bg-white p-2"><img src="${q.image_url}" class="max-w-md h-auto rounded-lg shadow-inner" onerror="this.style.display='none'"></div>`;
+            let passageHtml = q.passage_text ? `<div class="bg-amber-50 p-8 rounded-3xl mb-8 border-2 border-amber-200 ql-editor passage-content max-h-[500px] overflow-y-auto">${q.passage_text}</div>` : '';
+            box.innerHTML = `<div class="mb-8 flex justify-between items-center"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${q.category}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed font-medium ql-editor px-0">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner':'border-slate-100 bg-white hover:border-slate-300'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
+            document.getElementById('btn-prev').disabled = currentIdx === 0; document.getElementById('btn-next').innerText = currentIdx === examQuestions.length - 1 ? "FINISH & SUBMIT" : "LANJUTKAN";
+        }
+
+        function selectAnswer(ans) { studentAnswers[currentIdx] = ans; renderQuestion(); }
+        function changeQuestion(s) { if(s === 1 && currentIdx === examQuestions.length - 1) return finishExam(); currentIdx += s; renderQuestion(); }
+        async function finishExam() { customConfirm("Selesaikan ujian dan kirim jawaban?", async () => { await autoFinishExam(); }, "Kirim"); }
+
+        async function autoFinishExam() {
+            if(examTimer) clearInterval(examTimer); setLoading(true);
+            let correct = 0; examQuestions.forEach((q, i) => { if(studentAnswers[i] === q.correct_answer) correct++; });
+            const score = Math.round((correct / examQuestions.length) * 990);
+            try {
+                await _sb.from('scores').insert([{ user_id: currentUser.id, student_name: profileData.full_name, total_score: score, meeting_number: currentMeeting }]);
+                notify(`Selesai! Skor Anda: ${score}`); document.getElementById('view-exam').classList.add('hidden'); setupDashboard(profileData.full_name, profileData.username);
+                examQuestions = []; studentAnswers = []; currentIdx = 0;
+            } catch (err) { notify("Error!", "error"); } finally { setLoading(false); }
+        }
+
+        function switchAdminTab(tab) {
+            ['students', 'scores', 'questions', 'locks'].forEach(t => { if(document.getElementById('admin-tab-'+t)) document.getElementById('admin-tab-'+t).classList.toggle('hidden', t!==tab); });
+            ['students', 'scores', 'questions', 'locks'].forEach(t => { if(document.getElementById('tab-btn-'+t)) document.getElementById('tab-btn-'+t).className = t===tab ? "whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all bg-[#6B8E7E] text-white shadow-lg" : "whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400"; });
+        }
+
+        window.processPastedJSON = async () => {
+            let raw = document.getElementById('import-json-textarea').value.trim(); 
+            if(!raw) return notify("Tempelkan JSON!", "error");
+            
+            setLoading(true);
+            try {
+                raw = raw.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+                const json = JSON.parse(raw);
+                if (!Array.isArray(json)) throw new Error("JSON harus berupa array.");
+
+                // Map sort_order berdasarkan urutan array JSON
+                const itemsToInsert = json.map((q, index) => ({ 
+                    ...q, 
+                    meeting_number: q.meeting_number || 1, 
+                    question_text: q.question_text || "Teks soal kosong",
+                    sort_order: index 
+                }));
+
+                const { error } = await _sb.from('questions').insert(itemsToInsert);
+                
+                if (error) throw error;
+                notify(`Impor ${json.length} soal berhasil!`); 
+                closeImportModal(); 
+                loadQuestionData();
+            } catch (err) { 
+                notify("Format JSON tidak valid!", "error"); 
+            } finally { setLoading(false); }
+        };
+    </script>
+</body>
+</html>
