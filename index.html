@@ -635,6 +635,80 @@
 
         window.refreshIcons = function() { if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); } };
 
+        // --- MODAL & UI HELPERS (FUNGSI YANG DITAMBAHKAN) ---
+        window.openImportModal = () => document.getElementById('import-json-modal').classList.remove('hidden');
+        
+        window.closeImportModal = () => {
+            document.getElementById('import-json-modal').classList.add('hidden');
+            document.getElementById('import-json-textarea').value = '';
+        };
+
+        window.customConfirm = (msg, onConfirm, okText="Ya, Lanjutkan") => {
+            const m = document.getElementById('confirm-modal');
+            document.getElementById('confirm-message').innerText = msg;
+            document.getElementById('confirm-ok-btn').innerText = okText;
+            m.classList.remove('hidden');
+            document.getElementById('confirm-cancel-btn').onclick = () => m.classList.add('hidden');
+            document.getElementById('confirm-ok-btn').onclick = () => { m.classList.add('hidden'); if(onConfirm) onConfirm(); };
+        };
+
+        window.openEditMhsModal = (id, u, n, e, p) => {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-username').value = u;
+            document.getElementById('edit-name').value = n;
+            document.getElementById('edit-email').value = e;
+            document.getElementById('edit-prodi').value = p || '';
+            document.getElementById('edit-modal').classList.remove('hidden');
+        };
+        
+        window.closeEditModal = () => document.getElementById('edit-modal').classList.add('hidden');
+        
+        window.deleteStudent = (id) => {
+            window.customConfirm("Hapus mahasiswa ini secara permanen?", async () => {
+                window.setLoading(true);
+                await _sb.from('profiles').delete().eq('id', id);
+                window.setLoading(false);
+                window.notify("Mahasiswa terhapus!"); loadAdminData();
+            }, "Ya, Hapus");
+        };
+
+        window.openEditScoreModal = (id, name, meet, score) => {
+            document.getElementById('edit-score-id').value = id;
+            document.getElementById('edit-score-name-label').innerText = name;
+            document.getElementById('edit-score-meeting-label').innerText = "Pertemuan " + meet;
+            document.getElementById('edit-score-input').value = score;
+            document.getElementById('edit-score-modal').classList.remove('hidden');
+        };
+        
+        window.closeEditScoreModal = () => document.getElementById('edit-score-modal').classList.add('hidden');
+        
+        window.handleUpdateScore = async () => {
+            const id = document.getElementById('edit-score-id').value;
+            const val = document.getElementById('edit-score-input').value;
+            window.setLoading(true);
+            await _sb.from('scores').update({total_score: val}).eq('id', id);
+            window.setLoading(false);
+            window.notify("Skor berhasil diupdate!"); window.closeEditScoreModal(); loadScoreData();
+        };
+
+        window.deleteScore = (id) => {
+            window.customConfirm("Hapus riwayat skor ini?", async () => {
+                window.setLoading(true);
+                await _sb.from('scores').delete().eq('id', id);
+                window.setLoading(false);
+                window.notify("Skor terhapus!"); loadScoreData();
+            }, "Ya, Hapus");
+        };
+
+        window.deleteQuestion = (id) => {
+            window.customConfirm("Hapus soal ini?", async () => {
+                window.setLoading(true);
+                await _sb.from('questions').delete().eq('id', id);
+                window.setLoading(false);
+                window.notify("Soal terhapus!"); loadQuestionData();
+            }, "Ya, Hapus");
+        };
+
         // --- AUTH & NAVIGATION ---
         window.handleLogin = async function() {
             const idInput = document.getElementById('login-id').value.trim(), pass = document.getElementById('login-pass').value;
