@@ -294,7 +294,7 @@
             <div class="pastel-sage p-12 rounded-[3rem] text-white shadow-xl relative overflow-hidden text-white">
                 <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h2 class="text-4xl font-black mb-1 text-white">Halo, <span id="student-name-display">Mahasiswa</span>! :D</h2>
+                        <h2 class="text-4xl font-black mb-1 text-white">Halo, <span id="student-name-display">Mahasiswa</span>! </h2>
                         <p class="text-lg opacity-90 font-medium mb-1 text-white"><span id="student-prodi-display" class="bg-white/20 px-3 py-1 rounded-lg">Prodi</span></p>
                         <p class="text-sm opacity-80 font-bold text-white">Username: <span id="student-username-display" class="underline tracking-wide">@user</span></p>
                     </div>
@@ -1269,11 +1269,26 @@
             try {
                 raw = raw.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
                 const json = JSON.parse(raw);
-                const itemsToInsert = json.map((q, index) => ({ ...q, meeting_number: q.meeting_number || 1, question_text: q.question_text || "Teks soal kosong", sort_order: index }));
+                // Ekstrak HANYA kolom yang ada di database agar tidak terjadi error karena kolom tidak dikenal (seperti 'explanation')
+                const itemsToInsert = json.map((q, index) => ({ 
+                    question_text: q.question_text || "Teks soal kosong", 
+                    passage_text: q.passage_text || null,
+                    option_a: q.option_a || "",
+                    option_b: q.option_b || "",
+                    option_c: q.option_c || "",
+                    option_d: q.option_d || "",
+                    correct_answer: q.correct_answer || "A",
+                    category: q.category || "Reading",
+                    meeting_number: q.meeting_number || 1, 
+                    sort_order: index 
+                }));
                 const { error } = await _sb.from('questions').insert(itemsToInsert);
                 if (error) throw error;
-                window.notify(`Berhasil!`); closeImportModal(); loadQuestionData();
-            } catch (err) { window.notify("Gagal!", "error"); } finally { window.setLoading(false); }
+                window.notify(`Berhasil menambahkan ${itemsToInsert.length} soal!`); closeImportModal(); loadQuestionData();
+            } catch (err) { 
+                console.error(err);
+                window.notify("Gagal: " + (err.message || "Format JSON salah"), "error"); 
+            } finally { window.setLoading(false); }
         };
 
         window.handleUpdateStudent = async () => {
