@@ -273,12 +273,12 @@
 
         <!-- 2. STUDENT DASHBOARD -->
         <section id="view-student" class="hidden animate-fade-in space-y-8">
-            <div class="pastel-sage p-12 rounded-[3rem] text-white shadow-xl relative overflow-hidden">
+            <div class="pastel-sage p-12 rounded-[3rem] text-white shadow-xl relative overflow-hidden text-white">
                 <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
                         <h2 class="text-4xl font-black mb-1 text-white">Halo, <span id="student-name-display">Mahasiswa</span>! 👋</h2>
-                        <p class="text-lg opacity-90 font-medium mb-1"><span id="student-prodi-display" class="bg-white/20 px-3 py-1 rounded-lg">Prodi</span></p>
-                        <p class="text-sm opacity-80 font-bold">Username: <span id="student-username-display" class="underline tracking-wide">@user</span></p>
+                        <p class="text-lg opacity-90 font-medium mb-1 text-white"><span id="student-prodi-display" class="bg-white/20 px-3 py-1 rounded-lg">Prodi</span></p>
+                        <p class="text-sm opacity-80 font-bold text-white">Username: <span id="student-username-display" class="underline tracking-wide">@user</span></p>
                     </div>
                     <button onclick="openSelfEditProfile()" class="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-2xl text-sm font-black border border-white/30 transition flex items-center gap-2">
                         <i data-lucide="settings"></i> PENGATURAN PROFIL
@@ -334,28 +334,43 @@
                 </div>
             </div>
 
-             <div id="admin-tab-students" class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-x-auto">
-                <table class="w-full text-left min-w-[700px]">
-                    <thead class="bg-slate-50 border-b-2 border-slate-100">
-                        <tr>
-                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Username</th>
-                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Nama Mahasiswa</th>
-                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Program Studi</th>
-                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Skor Tertinggi</th>
-                            <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-students" class="divide-y divide-slate-100"></tbody>
-                </table>
+            <!-- Tab Mahasiswa -->
+             <div id="admin-tab-students" class="space-y-6">
+                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 card-shadow flex flex-col md:flex-row items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 pastel-sage rounded-xl text-white"><i data-lucide="search" class="w-5 h-5 text-white"></i></div>
+                        <h4 class="font-black text-sage-dark uppercase tracking-widest text-xs">Cari Mahasiswa</h4>
+                    </div>
+                    <input type="text" id="admin-student-search" onkeyup="loadAdminData()" placeholder="Ketik nama mahasiswa..." class="w-full md:w-80 p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-[#6B8E7E] font-medium text-sm">
+                </div>
+                <div class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-x-auto">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 border-b-2 border-slate-100">
+                            <tr>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Username</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Nama Mahasiswa</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Program Studi</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Skor Tertinggi</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-students" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
             </div>
 
+            <!-- Tab Hasil Ujian -->
             <div id="admin-tab-scores" class="hidden space-y-6">
-                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 card-shadow flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="bg-white p-6 rounded-[2.5rem] border border-slate-100 card-shadow flex flex-col md:flex-row items-center gap-6">
                     <div class="flex items-center gap-3">
-                        <div class="p-2 pastel-sage rounded-xl text-white"><i data-lucide="filter" class="w-5 h-5"></i></div>
-                        <h4 class="font-black text-sage-dark uppercase tracking-widest text-xs">Filter Hasil</h4>
+                        <div class="p-2 pastel-sage rounded-xl text-white"><i data-lucide="filter" class="w-5 h-5 text-white"></i></div>
+                        <h4 class="font-black text-sage-dark uppercase tracking-widest text-xs text-sage-dark">Filter Hasil</h4>
                     </div>
-                    <select id="admin-score-meeting-filter" onchange="loadScoreData()" class="w-full md:w-64 p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-sage font-bold"></select>
+                    <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                        <select id="admin-score-meeting-filter" onchange="loadScoreData()" class="w-full md:w-48 p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-[#6B8E7E] font-bold text-sm">
+                        </select>
+                        <input type="text" id="admin-score-search" onkeyup="loadScoreData()" placeholder="Cari nama mahasiswa..." class="w-full md:w-64 p-3 bg-slate-50 border-2 border-slate-100 rounded-xl outline-none focus:border-[#6B8E7E] font-medium text-sm">
+                    </div>
                 </div>
                 <div class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-x-auto">
                     <table class="w-full text-left min-w-[700px]">
@@ -373,37 +388,39 @@
                 </div>
             </div>
 
+            <!-- Tab Soal -->
             <div id="admin-tab-questions" class="hidden space-y-8">
                 <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
                     <div class="flex justify-between items-start mb-8">
                         <h3 id="form-question-title" class="font-black text-2xl text-sage-dark">Tambah Soal Baru</h3>
                         <button onclick="openImportModal()" class="btn-secondary px-6 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition active:scale-95 text-[#4F5B1E]">
-                             <i data-lucide="file-up" class="w-4 h-4"></i> Import JSON
+                             <i data-lucide="file-up" class="w-4 h-4 text-[#4F5B1E]"></i> Import JSON
                         </button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <input type="hidden" id="q-edit-id">
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Pertemuan (1-16)</label>
-                            <select id="q-meeting" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold"></select>
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Pertemuan (1-16)</label>
+                            <select id="q-meeting" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold">
+                            </select>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Teks Bacaan (Passage)</label>
+                        <div class="md:col-span-2 text-slate-800">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Teks Bacaan (Passage)</label>
                             <div id="passage-editor-container" class="editor-box"></div>
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Teks Pertanyaan</label>
+                        <div class="md:col-span-2 text-slate-800">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Teks Pertanyaan</label>
                             <div id="question-editor-container" class="editor-box"></div>
                         </div>
-                        <input type="text" id="q-opt-a" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi A">
-                        <input type="text" id="q-opt-b" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi B">
-                        <input type="text" id="q-opt-c" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi C">
-                        <input type="text" id="q-opt-d" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-sage" placeholder="Opsi D">
-                        <select id="q-correct" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-sage">
+                        <input type="text" id="q-opt-a" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi A">
+                        <input type="text" id="q-opt-b" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi B">
+                        <input type="text" id="q-opt-c" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi C">
+                        <input type="text" id="q-opt-d" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi D">
+                        <select id="q-correct" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-[#6B8E7E] text-slate-700">
                             <option value="A">Jawaban A</option><option value="B">Jawaban B</option>
                             <option value="C">Jawaban C</option><option value="D">Jawaban D</option>
                         </select>
-                        <select id="q-cat" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-sage">
+                        <select id="q-cat" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-[#6B8E7E] text-slate-700">
                             <option value="Listening">Listening</option><option value="Reading">Reading</option>
                         </select>
                         <div class="md:col-span-2 grid grid-cols-2 gap-4">
@@ -438,22 +455,22 @@
                 </div>
                 <div id="save-order-container" class="hidden sticky bottom-6 flex justify-center">
                     <button onclick="saveManualOrder()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl flex items-center gap-3 hover:bg-indigo-700 transition transform active:scale-95">
-                        <i data-lucide="save" class="w-5 h-5"></i> SIMPAN PERUBAHAN URUTAN SOAL
+                        <i data-lucide="save" class="w-5 h-5 text-white"></i> SIMPAN PERUBAHAN URUTAN SOAL
                     </button>
                 </div>
             </div>
 
             <div id="admin-tab-locks" class="hidden space-y-6">
                 <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
-                    <h3 class="font-black text-2xl text-sage-dark mb-8 flex items-center gap-3">
-                        <i data-lucide="settings-2"></i> Pengaturan Akses Pertemuan
+                    <h3 class="font-black text-2xl text-sage-dark mb-8 flex items-center gap-3 text-sage-dark">
+                        <i data-lucide="settings-2" class="text-sage-dark"></i> Pengaturan Akses Pertemuan
                     </h3>
                     <p class="text-sm text-slate-500 mb-8 italic">Geser sakelar ke kanan untuk membuka pertemuan bagi mahasiswa.</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="admin-locks-grid"></div>
                 </div>
             </div>
 
-            <div id="admin-tab-announcement" class="hidden space-y-8">
+            <div id="admin-tab-announcement" class="hidden space-y-8 text-slate-800">
                 <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
                     <div class="flex justify-between items-center mb-8">
                         <h3 class="font-black text-2xl text-sage-dark">Set Pengumuman Pop-up</h3>
@@ -467,7 +484,7 @@
                     </div>
                     <div class="space-y-6">
                         <div>
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Isi Pengumuman</label>
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Isi Pengumuman</label>
                             <div id="announcement-editor-container" class="editor-box" style="height: 250px;"></div>
                         </div>
                         <button onclick="handleSaveAnnouncement()" class="w-full btn-primary py-4 rounded-2xl font-black text-lg shadow-xl uppercase tracking-widest text-white">SIMPAN & PERBARUI PENGUMUMAN</button>
@@ -478,27 +495,27 @@
 
         <!-- 4. EXAM INTERFACE -->
         <section id="view-exam" class="hidden max-w-5xl mx-auto pb-20 text-slate-800">
-            <div class="bg-white rounded-[3rem] card-shadow overflow-hidden border border-slate-200">
+            <div class="bg-white rounded-[3rem] card-shadow overflow-hidden border border-slate-200 text-slate-800">
                 <div class="pastel-sage p-7 text-white flex justify-between items-center">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shadow-inner">
-                            <i data-lucide="clock"></i>
+                            <i data-lucide="clock" class="text-white"></i>
                         </div>
                         <div>
-                            <p id="exam-mode-label" class="text-[10px] font-black uppercase tracking-widest opacity-70">Timer Aktif</p>
-                            <span id="exam-title" class="font-extrabold text-xl">TOEIC Practice</span>
+                            <p id="exam-mode-label" class="text-[10px] font-black uppercase tracking-widest opacity-70 text-white">Timer Aktif</p>
+                            <span id="exam-title" class="font-extrabold text-xl text-white">TOEIC Practice</span>
                         </div>
                     </div>
                     <div class="flex flex-col items-center">
-                        <span id="exam-timer" class="bg-white/20 px-6 py-2.5 rounded-2xl text-lg font-mono font-black border border-white/30 tracking-widest min-w-[100px] text-center">00:00</span>
-                        <p id="dynamic-time-info" class="text-[9px] font-bold uppercase mt-1 opacity-70 tracking-tighter">Waktu Menyesuaikan</p>
+                        <span id="exam-timer" class="bg-white/20 px-6 py-2.5 rounded-2xl text-lg font-mono font-black border border-white/30 tracking-widest min-w-[100px] text-center text-white">00:00</span>
+                        <p id="dynamic-time-info" class="text-[9px] font-bold uppercase mt-1 opacity-70 tracking-tighter text-white">Waktu Menyesuaikan</p>
                     </div>
                 </div>
                 <div id="exam-container" class="p-8 md:p-12">
-                    <div id="current-question-box" class="ql-snow"></div>
+                    <div id="current-question-box" class="ql-snow text-slate-800"></div>
                     <div class="mt-14 flex justify-between items-center gap-6">
-                        <button id="btn-prev" onclick="changeQuestion(-1)" class="px-10 py-4 rounded-2xl font-black text-slate-400 hover:text-sage-dark hover:bg-slate-50 transition-all disabled:opacity-20 uppercase tracking-widest text-xs">Kembali</button>
-                        <button id="btn-next" onclick="changeQuestion(1)" class="btn-primary px-16 py-4 rounded-2xl font-black text-lg shadow-xl uppercase tracking-widest transition active:scale-95 text-white">Lanjutkan</button>
+                        <button id="btn-prev" onclick="window.changeQuestion(-1)" class="px-10 py-4 rounded-2xl font-black text-slate-400 hover:text-sage-dark hover:bg-slate-50 transition-all disabled:opacity-20 uppercase tracking-widest text-xs">Kembali</button>
+                        <button id="btn-next" onclick="window.changeQuestion(1)" class="btn-primary px-16 py-4 rounded-2xl font-black text-lg shadow-xl uppercase tracking-widest transition active:scale-95 text-white">Lanjutkan</button>
                     </div>
                 </div>
             </div>
@@ -507,63 +524,65 @@
     </main>
 
     <!-- SELF EDIT PROFILE MODAL -->
-    <div id="self-edit-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-4 backdrop-blur-sm">
+    <div id="self-edit-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-4 backdrop-blur-sm text-slate-800">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] card-shadow p-8 animate-modal">
-            <h3 class="text-2xl font-extrabold text-sage-dark mb-6 flex items-center gap-3">
-                <i data-lucide="user-cog"></i> Pengaturan Profil
+            <h3 class="text-2xl font-extrabold text-sage-dark mb-6 flex items-center gap-3 text-sage-dark">
+                <i data-lucide="user-cog" class="text-sage-dark"></i> Pengaturan Profil
             </h3>
-            <div class="space-y-4 text-slate-700">
+            <div class="space-y-4 text-slate-700 text-slate-800">
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Username Baru</label>
-                    <input type="text" id="self-username" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Username Baru</label>
+                    <input type="text" id="self-username" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold text-slate-700">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Program Studi</label>
-                    <select id="self-prodi" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Program Studi</label>
+                    <select id="self-prodi" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold text-slate-700">
                         <option value="S1 TTL">S1 TTL</option>
                         <option value="S1 Keselamatan">S1 Keselamatan</option>
                     </select>
                 </div>
-                <div class="pt-2 border-t border-slate-100">
-                    <label class="block text-[10px] font-black uppercase text-rose-400 mb-1 ml-1">Password Baru (Kosongkan jika tidak ganti)</label>
-                    <input type="password" id="self-pass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400" placeholder="••••••••">
+                <div class="pt-2 border-t border-slate-100 text-slate-800">
+                    <label class="block text-[10px] font-black uppercase text-rose-400 mb-1 ml-1 text-rose-400">Password Baru (Kosongkan jika tidak ganti)</label>
+                    <input type="password" id="self-pass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400 text-slate-700" placeholder="••••••••">
                 </div>
                 <div class="flex gap-3 pt-6">
-                    <button onclick="closeSelfEditProfile()" class="flex-1 bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-200 transition">Batal</button>
-                    <button onclick="handleUpdateSelfProfile()" class="flex-1 btn-primary py-4 rounded-2xl font-black shadow-lg text-white">Simpan Perubahan</button>
+                    <button onclick="window.closeSelfEditProfile()" class="flex-1 bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-200 transition text-slate-500">Batal</button>
+                    <button onclick="window.handleUpdateSelfProfile()" class="flex-1 btn-primary py-4 rounded-2xl font-black shadow-lg text-white">Simpan Perubahan</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- ADMIN EDIT STUDENT MODAL -->
-    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4 backdrop-blur-sm">
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4 backdrop-blur-sm text-slate-800">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] card-shadow p-8 animate-modal">
-            <h3 class="text-2xl font-extrabold text-sage-dark mb-6">Edit Mahasiswa (Admin)</h3>
-            <div class="space-y-4 text-slate-700">
+            <h3 class="text-2xl font-extrabold text-sage-dark mb-6 flex items-center gap-3 text-sage-dark">
+                <i data-lucide="user-cog" class="text-sage-dark"></i> Edit Mahasiswa (Admin)
+            </h3>
+            <div class="space-y-4 text-slate-700 text-slate-800">
                 <input type="hidden" id="edit-id">
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Username</label>
-                    <input type="text" id="edit-username" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Username</label>
+                    <input type="text" id="edit-username" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 font-medium">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Nama Lengkap</label>
-                    <input type="text" id="edit-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Nama Lengkap</label>
+                    <input type="text" id="edit-name" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 font-medium">
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Program Studi</label>
-                    <select id="edit-prodi" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Program Studi</label>
+                    <select id="edit-prodi" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 font-medium">
                         <option value="S1 TTL">S1 TTL</option>
                         <option value="S1 Keselamatan">S1 Keselamatan</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1">Email</label>
-                    <input type="email" id="edit-email" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E]">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Email</label>
+                    <input type="email" id="edit-email" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 font-medium">
                 </div>
                 <div class="flex gap-3 pt-4">
-                    <button onclick="closeEditModal()" class="flex-1 bg-slate-100 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition text-slate-500">Batal</button>
-                    <button onclick="handleUpdateStudent()" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Simpan</button>
+                    <button onclick="window.closeEditModal()" class="flex-1 bg-slate-100 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-200 transition text-slate-500">Batal</button>
+                    <button onclick="window.handleUpdateStudent()" class="flex-1 btn-primary py-3 rounded-xl font-bold text-white">Simpan</button>
                 </div>
             </div>
         </div>
@@ -784,13 +803,22 @@
 
         // --- ADMIN HELPERS ---
         async function loadAdminData() {
+            const searchVal = document.getElementById('admin-student-search')?.value.toLowerCase() || "";
             const { data: std } = await _sb.from('profiles').select('*'), { data: scr } = await _sb.from('scores').select('*');
             const body = document.getElementById('table-students'); if(!body) return;
             body.innerHTML = '';
-            std?.filter(s => s.role !== 'admin' && s.username !== 'admin').forEach(s => {
+            
+            // Filter by Role and Search Name
+            const filteredStd = std?.filter(s => {
+                const isNotAdmin = s.role !== 'admin' && s.username !== 'admin';
+                const matchesSearch = s.full_name.toLowerCase().includes(searchVal) || s.username.toLowerCase().includes(searchVal);
+                return isNotAdmin && matchesSearch;
+            });
+
+            filteredStd?.forEach(s => {
                 const sScr = scr?.filter(sc => sc.user_id === s.id).sort((a,b) => b.total_score - a.total_score);
                 const best = sScr && sScr.length > 0 ? sScr[0].total_score : '0';
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 font-medium text-slate-500">${s.study_program || '-'}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}', '${s.study_program}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i></button></td></tr>`;
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 font-medium text-slate-500">${s.study_program || '-'}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="window.openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}', '${s.study_program}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i></button></td></tr>`;
             });
             window.refreshIcons();
         }
@@ -801,7 +829,7 @@
             body.innerHTML = ''; currentQuestionsRaw = data || []; 
             currentQuestionsRaw.forEach((q, index) => {
                 const cleanText = (q.question_text || "").replace(/<[^>]*>?/gm, '').substring(0, 50) + "...";
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors" data-id="${q.id}"><td class="p-4 text-center"><div class="drag-handle text-slate-300 hover:text-indigo-500"><i data-lucide="grip-vertical"></i></div></td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i></button></td></tr>`;
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800" data-id="${q.id}"><td class="p-4 text-center"><div class="drag-handle text-slate-300 hover:text-indigo-500"><i data-lucide="grip-vertical"></i></div></td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i></button></td></tr>`;
             });
             window.refreshIcons(); initDragAndDrop();
         }
@@ -870,10 +898,17 @@
         // --- SCORE HANDLERS ---
         async function loadScoreData() {
             const filterValue = document.getElementById('admin-score-meeting-filter').value;
+            const searchVal = document.getElementById('admin-score-search')?.value.toLowerCase() || "";
             window.setLoading(true); const { data } = await _sb.from('scores').select('*').order('created_at', { ascending: false });
             window.setLoading(false); const body = document.getElementById('table-all-scores'); if(!body) return;
             body.innerHTML = '';
-            const filteredData = filterValue === 'all' ? data : data.filter(sc => sc.meeting_number == filterValue);
+            
+            const filteredData = data?.filter(sc => {
+                const matchesMeeting = filterValue === 'all' ? true : sc.meeting_number == filterValue;
+                const matchesSearch = sc.student_name.toLowerCase().includes(searchVal);
+                return matchesMeeting && matchesSearch;
+            });
+
             if(!filteredData || filteredData.length === 0) { body.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 italic font-bold">Belum ada data nilai.</td></tr>'; return; }
             filteredData.forEach(sc => {
                 const ds = new Date(sc.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
@@ -888,7 +923,7 @@
             const list = document.getElementById('student-scores-list'); if(!list) return;
             list.innerHTML = data?.length > 0 ? data.map(s => {
                 const level = window.getToeicLevel(s.total_score);
-                return `<div class="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm text-slate-700 font-medium"><div class="flex flex-col gap-1"><p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Meeting ${s.meeting_number} • ${new Date(s.created_at).toLocaleDateString()}</p><p class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full w-fit ${level.color}">${level.label} Level</p></div><div class="text-right"><span class="text-3xl font-black text-sage-dark">${s.total_score}</span><p class="text-[9px] font-bold text-slate-400 uppercase">${level.full}</p></div></div>`;
+                return `<div class="flex justify-between items-center p-6 bg-slate-50 rounded-3xl border-2 border-slate-100 shadow-sm text-slate-700 font-medium text-slate-800"><div class="flex flex-col gap-1 text-slate-800"><p class="text-[10px] text-slate-400 font-black uppercase tracking-widest text-slate-400">Meeting ${s.meeting_number} • ${new Date(s.created_at).toLocaleDateString()}</p><p class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full w-fit ${level.color}">${level.label} Level</p></div><div class="text-right text-slate-800"><span class="text-3xl font-black text-sage-dark">${s.total_score}</span><p class="text-[9px] font-bold text-slate-400 uppercase text-slate-400">${level.full}</p></div></div>`;
             }).join('') : '<p class="text-center text-slate-400 italic py-8">Belum ada nilai.</p>';
         }
 
@@ -926,8 +961,8 @@
             const q = examQuestions[currentIdx], box = document.getElementById('current-question-box'); if(!box) return;
             let m = ''; if(q.audio_url) m += `<div class="bg-slate-50 p-6 rounded-3xl mb-4 border-2"><audio controls src="${q.audio_url}" class="w-full"></audio></div>`;
             if(q.image_url) m += `<div class="mb-6 rounded-3xl overflow-hidden border-2 shadow-sm flex justify-center bg-white p-2"><img src="${q.image_url}" class="max-w-md h-auto rounded-lg shadow-inner" onerror="this.style.display='none'"></div>`;
-            let passageHtml = q.passage_text ? `<div class="bg-amber-50 p-8 rounded-3xl mb-8 border-2 border-amber-200 ql-editor passage-content max-h-[500px] overflow-y-auto text-slate-800">${q.passage_text}</div>` : '';
-            box.innerHTML = `<div class="mb-8 flex justify-between items-center text-slate-500 font-bold"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${q.category}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed ql-editor px-0 font-medium">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="window.selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner text-sage-dark':'border-slate-100 bg-white hover:border-slate-300 text-slate-700'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
+            let passageHtml = q.passage_text ? `<div class="bg-amber-50 p-8 rounded-3xl mb-8 border-2 border-amber-200 ql-editor passage-content max-h-[500px] overflow-y-auto text-slate-800 text-slate-800">${q.passage_text}</div>` : '';
+            box.innerHTML = `<div class="mb-8 flex justify-between items-center text-slate-500 font-bold text-slate-500"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest text-slate-500">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest text-slate-400">${q.category}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed ql-editor px-0 font-medium text-slate-800">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="window.selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner text-sage-dark':'border-slate-100 bg-white hover:border-slate-300 text-slate-700'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
             const bp = document.getElementById('btn-prev'); if(bp) bp.disabled = currentIdx === 0;
             const bn = document.getElementById('btn-next'); if(bn) bn.innerText = currentIdx === examQuestions.length - 1 ? "FINISH & SUBMIT" : "LANJUTKAN";
         }
@@ -971,7 +1006,10 @@
             window.refreshIcons();
             const meetingSel = document.getElementById('q-meeting');
             const scoreFilter = document.getElementById('admin-score-meeting-filter');
-            if(meetingSel) { for(let i=1; i<=16; i++) meetingSel.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`; }
+            if(meetingSel) { 
+                meetingSel.innerHTML = "";
+                for(let i=1; i<=16; i++) meetingSel.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`; 
+            }
             if(scoreFilter) {
                 scoreFilter.innerHTML = '<option value="all">Semua Pertemuan</option>';
                 for(let i=1; i<=16; i++) scoreFilter.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`;
