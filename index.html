@@ -154,8 +154,25 @@
         </div>
     </div>
 
+    <!-- STUDENT VIEW MATERIAL MODAL -->
+    <div id="student-material-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[500] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-4xl h-[90vh] rounded-[2.5rem] card-shadow p-8 md:p-10 animate-modal relative flex flex-col text-slate-800">
+            <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                <div>
+                    <p class="text-xs font-black uppercase text-slate-400 tracking-widest mb-1">Materi Pembelajaran</p>
+                    <h3 class="text-3xl font-black text-sage-dark" id="modal-material-title">Judul Materi</h3>
+                </div>
+                <button onclick="closeStudentMaterialModal()" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-3 rounded-full transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div id="modal-material-content" class="ql-editor passage-content overflow-y-auto flex-1 px-4 text-slate-800 leading-relaxed"></div>
+            <div class="pt-6 border-t border-slate-100 mt-4">
+                <button onclick="closeStudentMaterialModal()" class="w-full btn-primary py-4 rounded-2xl font-black text-lg shadow-lg uppercase tracking-widest text-white">SELESAI MEMBACA</button>
+            </div>
+        </div>
+    </div>
+
     <!-- CUSTOM CONFIRMATION MODAL -->
-    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[300] p-4 backdrop-blur-sm">
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[600] p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-sm rounded-[2.5rem] card-shadow p-8 text-center animate-modal">
             <div class="pastel-rose w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="alert-triangle" class="text-rose-600 w-8 h-8"></i>
@@ -277,7 +294,7 @@
             <div class="pastel-sage p-12 rounded-[3rem] text-white shadow-xl relative overflow-hidden text-white">
                 <div class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div>
-                        <h2 class="text-4xl font-black mb-1 text-white">Halo, <span id="student-name-display">Mahasiswa</span>! 👋</h2>
+                        <h2 class="text-4xl font-black mb-1 text-white">Halo, <span id="student-name-display">Mahasiswa</span>! :D</h2>
                         <p class="text-lg opacity-90 font-medium mb-1 text-white"><span id="student-prodi-display" class="bg-white/20 px-3 py-1 rounded-lg">Prodi</span></p>
                         <p class="text-sm opacity-80 font-bold text-white">Username: <span id="student-username-display" class="underline tracking-wide">@user</span></p>
                     </div>
@@ -294,6 +311,18 @@
                     <span class="p-2.5 pastel-sage-light rounded-xl"><i data-lucide="layout-grid" class="w-6 h-6 text-sage-dark"></i></span>
                     Daftar Pertemuan
                 </h3>
+                
+                <!-- Legend Info Materi Pembelajaran -->
+                <div class="bg-blue-50 text-blue-800 p-5 rounded-3xl mb-6 text-sm flex flex-col md:flex-row md:items-start gap-4 border border-blue-100">
+                    <div class="p-2 bg-blue-100 rounded-xl inline-flex text-blue-500">
+                        <i data-lucide="info" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="font-black mb-1 text-base tracking-tight text-blue-900">Informasi</p>
+                        <p class="opacity-80 leading-relaxed font-medium">Jika terdapat ikon buku (<i data-lucide="book-open" class="w-4 h-4 inline mx-0.5 text-yellow-600"></i>) pada bagian meeting, Anda <strong>diwajibkan membaca materi</strong> tersebut. Setelah selesai, ikon akan berubah menjadi centang hijau (<i data-lucide="check-circle-2" class="w-4 h-4 inline text-green-500 mx-0.5"></i>) sebagai penanda materi sudah dipelajari.</p>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4" id="meetings-grid"></div>
             </div>
 
@@ -326,10 +355,11 @@
                     <h2 class="text-4xl font-black text-sage-dark mb-2 tracking-tight">Dashboard Dosen</h2>
                     <p class="text-slate-500 font-bold">Manajemen Mahasiswa & Kurikulum</p>
                 </div>
-                <div class="flex p-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+                <div class="flex p-2 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto custom-scrollbar">
                     <button onclick="switchAdminTab('students')" id="tab-btn-students" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all bg-[#6B8E7E] text-white shadow-lg">MAHASISWA</button>
                     <button onclick="switchAdminTab('scores')" id="tab-btn-scores" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">HASIL UJIAN</button>
                     <button onclick="switchAdminTab('questions')" id="tab-btn-questions" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">BANK SOAL</button>
+                    <button onclick="switchAdminTab('materials')" id="tab-btn-materials" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">MATERI BELAJAR</button>
                     <button onclick="switchAdminTab('locks')" id="tab-btn-locks" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">KONTROL KELAS</button>
                     <button onclick="switchAdminTab('announcement')" id="tab-btn-announcement" class="whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400">PENGUMUMAN</button>
                 </div>
@@ -458,6 +488,46 @@
                     <button onclick="saveManualOrder()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl flex items-center gap-3 hover:bg-indigo-700 transition transform active:scale-95">
                         <i data-lucide="save" class="w-5 h-5 text-white"></i> SIMPAN PERUBAHAN URUTAN SOAL
                     </button>
+                </div>
+            </div>
+
+            <!-- Tab Materi Pembelajaran -->
+            <div id="admin-tab-materials" class="hidden space-y-8">
+                <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
+                    <div class="flex justify-between items-start mb-8">
+                        <h3 id="form-material-title" class="font-black text-2xl text-sage-dark">Tambah Materi Baru</h3>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6">
+                        <input type="hidden" id="m-edit-id">
+                        <div>
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Pertemuan (1-16)</label>
+                            <select id="m-meeting" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Judul Materi Singkat</label>
+                            <input type="text" id="m-title" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold text-slate-700" placeholder="Misal: Part 1 - Photographs Tips">
+                        </div>
+                        <div class="text-slate-800">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Isi Konten Materi</label>
+                            <div id="material-editor-container" class="editor-box" style="height: 350px;"></div>
+                        </div>
+                        <div class="flex gap-3 mt-4">
+                             <button id="btn-save-material" onclick="handleSaveMaterial()" class="flex-1 btn-primary py-4 rounded-2xl font-black text-lg shadow-lg uppercase tracking-wider text-white">Simpan Materi</button>
+                             <button id="btn-cancel-edit-material" onclick="resetMaterialForm()" class="hidden bg-slate-100 px-8 rounded-2xl font-bold text-slate-400 uppercase tracking-wider">Batal</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[2.5rem] card-shadow border border-slate-100 overflow-hidden">
+                    <table class="w-full text-left min-w-[700px]">
+                        <thead class="bg-slate-50 border-b-2 border-slate-100">
+                            <tr>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center w-24">Pertm.</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Judul Materi</th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-materials" class="divide-y divide-slate-100"></tbody>
+                    </table>
                 </div>
             </div>
 
@@ -603,11 +673,14 @@
         const _sb = supabase.createClient(SB_URL, SB_KEY);
 
         let currentUser = null, profileData = null, examQuestions = [], currentIdx = 0, studentAnswers = [];
-        let qEditor = null, pEditor = null, aEditor = null; 
+        let qEditor = null, pEditor = null, aEditor = null, mEditor = null; 
         let examTimer = null, timeLeft = 0, currentMeeting = 1;
         let meetingLocks = {}; 
         let currentQuestionsRaw = []; 
+        let materialsData = [];
+        let studentBestScores = {}; // Tambahan untuk menyimpan skor tertinggi per pertemuan
         let sortableInstance = null;
+        let currentViewMaterialId = null; // Menyimpan ID materi yang sedang dilihat
 
         // --- GLOBAL UTILITIES (WINDOW ASSIGNED EARLY) ---
         window.getToeicLevel = function(score) {
@@ -635,7 +708,7 @@
 
         window.refreshIcons = function() { if (typeof lucide !== 'undefined' && lucide.createIcons) { lucide.createIcons(); } };
 
-        // --- MODAL & UI HELPERS (FUNGSI YANG DITAMBAHKAN) ---
+        // --- MODAL & UI HELPERS ---
         window.openImportModal = () => document.getElementById('import-json-modal').classList.remove('hidden');
         
         window.closeImportModal = () => {
@@ -709,6 +782,27 @@
             }, "Ya, Hapus");
         };
 
+        window.openStudentMaterial = (id) => {
+            const mat = materialsData.find(m => m.id === id);
+            if(mat) {
+                currentViewMaterialId = id; // Simpan ID materi yang sedang dilihat
+                document.getElementById('modal-material-title').innerText = mat.title;
+                document.getElementById('modal-material-content').innerHTML = mat.content;
+                document.getElementById('student-material-modal').classList.remove('hidden');
+            }
+        };
+
+        window.closeStudentMaterialModal = () => {
+            if (currentViewMaterialId && currentUser) {
+                // Tandai materi sebagai "sudah dibaca" di LocalStorage
+                localStorage.setItem(`read_mat_${currentUser.id}_${currentViewMaterialId}`, 'true');
+                currentViewMaterialId = null; // Reset
+                window.generateMeetingsGrid(); // Perbarui tampilan ikon di grid
+            }
+            document.getElementById('student-material-modal').classList.add('hidden');
+            document.getElementById('modal-material-content').innerHTML = '';
+        };
+
         // --- AUTH & NAVIGATION ---
         window.handleLogin = async function() {
             const idInput = document.getElementById('login-id').value.trim(), pass = document.getElementById('login-pass').value;
@@ -742,11 +836,11 @@
         };
 
         window.switchAdminTab = function(tab) {
-            ['students', 'scores', 'questions', 'locks', 'announcement'].forEach(t => { 
+            ['students', 'scores', 'questions', 'locks', 'announcement', 'materials'].forEach(t => { 
                 const el = document.getElementById('admin-tab-' + t);
                 if(el) el.classList.toggle('hidden', t !== tab); 
             });
-            ['students', 'scores', 'questions', 'locks', 'announcement'].forEach(t => { 
+            ['students', 'scores', 'questions', 'locks', 'announcement', 'materials'].forEach(t => { 
                 const btn = document.getElementById('tab-btn-' + t);
                 if(btn) btn.className = t === tab ? "whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all bg-[#6B8E7E] text-white shadow-lg" : "whitespace-nowrap px-6 py-3 rounded-xl text-sm font-black transition-all text-slate-400"; 
             });
@@ -759,15 +853,46 @@
             for(let i=1; i<=16; i++) {
                 const isOpen = meetingLocks[i] || (currentUser && profileData && (profileData.role === 'admin' || profileData.username === 'admin'));
                 const isExam = (i === 8 || i === 16);
+                
+                // Cari apakah ada materi untuk pertemuan ini dan atur ikon status
+                let materialBtn = '';
+                const mat = materialsData.find(m => m.meeting_number == i);
+                if (mat && profileData && profileData.role !== 'admin' && profileData.username !== 'admin') {
+                    const isRead = localStorage.getItem(`read_mat_${currentUser.id}_${mat.id}`) === 'true';
+                    if (isRead) {
+                        materialBtn = `<button onclick="event.stopPropagation(); window.openStudentMaterial('${mat.id}')" class="absolute top-3 right-3 p-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 transition shadow-sm z-20 tooltip" title="Materi Sudah Dibaca"><i data-lucide="check-circle-2" class="w-5 h-5"></i></button>`;
+                    } else {
+                        materialBtn = `<button onclick="event.stopPropagation(); window.openStudentMaterial('${mat.id}')" class="absolute top-3 right-3 p-2 bg-yellow-100 text-yellow-600 rounded-xl hover:bg-yellow-200 transition shadow-sm z-20 tooltip animate-pulse" title="Wajib Baca Materi Pembelajaran"><i data-lucide="book-open" class="w-5 h-5"></i></button>`;
+                    }
+                } else if (mat && (profileData.role === 'admin' || profileData.username === 'admin')) {
+                    materialBtn = `<div class="absolute top-2 right-2 px-2 py-1 bg-yellow-50 text-yellow-500 rounded-lg text-[8px] font-black tracking-widest border border-yellow-200 shadow-sm z-20"><i data-lucide="book" class="w-3 h-3 inline mr-1"></i>MATERI</div>`;
+                }
+
+                // Tambahkan Label Skor jika sudah pernah mengerjakan
+                let scoreBadge = '';
+                if (profileData && profileData.role !== 'admin' && profileData.username !== 'admin') {
+                    const bestScore = studentBestScores[i];
+                    if (bestScore !== undefined) {
+                        const level = window.getToeicLevel(bestScore);
+                        scoreBadge = `<div class="mt-3 w-full py-1.5 ${level.color} rounded-xl text-[10px] font-black shadow-sm flex items-center justify-center gap-1 border border-white/50"><i data-lucide="award" class="w-3 h-3"></i> SKOR: ${bestScore}</div>`;
+                    }
+                }
+
                 grid.innerHTML += `
-                    <button onclick="${isOpen ? `startExam(${i})` : `window.notify('Meeting ini dikunci oleh dosen.', 'error')`}" 
-                            class="group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${isOpen ? 'border-slate-100 hover:border-sage' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'}">
-                        <div class="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${isOpen ? (isExam ? 'bg-rose-50 text-rose-500' : 'bg-sage-light text-sage-dark') : 'bg-slate-200 text-slate-400'}">
-                            <i data-lucide="${!isOpen ? 'lock' : (isExam ? 'award' : 'book-text')}" class="w-5 h-5"></i>
-                        </div>
-                        <p class="text-[10px] font-black uppercase text-slate-400">Meeting ${i}</p>
-                        <p class="text-xs font-bold ${isOpen ? 'text-slate-800' : 'text-slate-400'}">${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}</p>
-                    </button>`;
+                    <div class="relative w-full h-full flex">
+                        ${materialBtn}
+                        <button onclick="${isOpen ? `startExam(${i})` : `window.notify('Meeting ini dikunci oleh dosen.', 'error')`}" 
+                                class="flex-1 w-full h-full flex flex-col justify-between items-center group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${isOpen ? 'border-slate-100 hover:border-sage' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'} relative z-10">
+                            <div class="w-full">
+                                <div class="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${isOpen ? (isExam ? 'bg-rose-50 text-rose-500' : 'bg-sage-light text-sage-dark') : 'bg-slate-200 text-slate-400'}">
+                                    <i data-lucide="${!isOpen ? 'lock' : (isExam ? 'award' : 'book-text')}" class="w-5 h-5"></i>
+                                </div>
+                                <p class="text-[10px] font-black uppercase text-slate-400">Meeting ${i}</p>
+                                <p class="text-xs font-bold ${isOpen ? 'text-slate-800' : 'text-slate-400'}">${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}</p>
+                            </div>
+                            ${scoreBadge}
+                        </button>
+                    </div>`;
             }
             window.refreshIcons();
         };
@@ -830,6 +955,72 @@
 
         window.closeStudentAnnouncement = function() { document.getElementById('student-announcement-modal').classList.add('hidden'); };
 
+        // --- MATERI PEMBELAJARAN HANDLERS ---
+        async function loadMaterialsData() {
+            const { data } = await _sb.from('materials').select('*').order('meeting_number', { ascending: true });
+            materialsData = data || [];
+            
+            const body = document.getElementById('table-materials'); 
+            if(body) {
+                body.innerHTML = '';
+                materialsData.forEach((m, index) => {
+                    body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800"><td class="p-6 text-center font-black text-slate-400">#${m.meeting_number}</td><td class="p-6 font-bold text-slate-700">${m.title}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editMaterialByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4"></i></button><button onclick="deleteMaterial('${m.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+                });
+                window.refreshIcons();
+            }
+
+            // Memperbarui grid mahasiswa setelah data materi didapatkan agar memunculkan icon buku
+            window.generateMeetingsGrid();
+        }
+
+        window.handleSaveMaterial = async function() {
+            const editId = document.getElementById('m-edit-id').value;
+            const mData = {
+                title: document.getElementById('m-title').value.trim(),
+                content: mEditor.root.innerHTML,
+                meeting_number: parseInt(document.getElementById('m-meeting').value)
+            };
+            if(!mData.title || mEditor.getText().trim() === "") return window.notify("Lengkapi judul dan isi materi!", "error");
+            
+            window.setLoading(true);
+            try {
+                if(editId) await _sb.from('materials').update(mData).eq('id', editId);
+                else await _sb.from('materials').insert([mData]);
+                window.resetMaterialForm(); loadMaterialsData(); window.notify("Materi berhasil disimpan!");
+            } catch (err) { window.notify("Error!", "error"); } finally { window.setLoading(false); }
+        };
+
+        window.resetMaterialForm = function() {
+            document.getElementById('form-material-title').innerText = 'Tambah Materi Baru';
+            document.getElementById('m-edit-id').value = "";
+            document.getElementById('m-title').value = "";
+            document.getElementById('m-meeting').value = "1";
+            mEditor.setContents([]);
+            document.getElementById('btn-save-material').innerText = "SIMPAN MATERI";
+            document.getElementById('btn-cancel-edit-material').classList.add('hidden');
+        };
+
+        window.editMaterialByIndex = (index) => {
+            const m = materialsData[index]; if (!m) return;
+            document.getElementById('form-material-title').innerText = 'Edit Data Materi';
+            document.getElementById('m-edit-id').value = m.id;
+            document.getElementById('m-title').value = m.title;
+            document.getElementById('m-meeting').value = m.meeting_number;
+            mEditor.root.innerHTML = m.content || '';
+            document.getElementById('btn-save-material').innerText = "Update Materi";
+            document.getElementById('btn-cancel-edit-material').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deleteMaterial = (id) => {
+            window.customConfirm("Hapus materi ini?", async () => {
+                window.setLoading(true);
+                await _sb.from('materials').delete().eq('id', id);
+                window.setLoading(false);
+                window.notify("Materi terhapus!"); loadMaterialsData();
+            }, "Ya, Hapus");
+        };
+
         // --- PROFILE LOGIC ---
         async function fetchProfileAndShow(uid) {
             const { data } = await _sb.from('profiles').select('*').eq('id', uid).single();
@@ -846,14 +1037,14 @@
             if(profileData.role === 'admin' || username === 'admin') {
                 document.getElementById('view-admin').classList.remove('hidden');
                 document.getElementById('view-student').classList.add('hidden');
-                loadAdminData(); loadScoreData(); loadQuestionData(); fetchMeetingLocks(); fetchAnnouncement();
+                loadAdminData(); loadScoreData(); loadQuestionData(); loadMaterialsData(); fetchMeetingLocks(); fetchAnnouncement();
             } else {
                 document.getElementById('view-student').classList.remove('hidden');
                 document.getElementById('view-admin').classList.add('hidden');
                 if(document.getElementById('student-name-display')) document.getElementById('student-name-display').innerText = name.split(' ')[0];
                 if(document.getElementById('student-username-display')) document.getElementById('student-username-display').innerText = "@" + username;
                 if(document.getElementById('student-prodi-display')) document.getElementById('student-prodi-display').innerText = profileData.study_program || "Belum Set Prodi";
-                loadStudentScores(); fetchMeetingLocks(); fetchAnnouncement();
+                loadStudentScores(); loadMaterialsData(); fetchMeetingLocks(); fetchAnnouncement();
             }
         }
 
@@ -997,6 +1188,19 @@
 
         async function loadStudentScores() {
             const { data } = await _sb.from('scores').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            
+            // Hitung skor terbaik per pertemuan untuk ditampilkan di grid
+            studentBestScores = {};
+            if (data && data.length > 0) {
+                data.forEach(s => {
+                    if (studentBestScores[s.meeting_number] === undefined || s.total_score > studentBestScores[s.meeting_number]) {
+                        studentBestScores[s.meeting_number] = s.total_score;
+                    }
+                });
+            }
+            // Render ulang grid pertemuan agar skor muncul di kartu
+            window.generateMeetingsGrid();
+
             const list = document.getElementById('student-scores-list'); if(!list) return;
             list.innerHTML = data?.length > 0 ? data.map(s => {
                 const level = window.getToeicLevel(s.total_score);
@@ -1081,20 +1285,49 @@
         // --- APP INITIALIZATION ---
         window.onload = () => {
             window.refreshIcons();
+            
+            // Populating options
             const meetingSel = document.getElementById('q-meeting');
+            const mMeetingSel = document.getElementById('m-meeting'); // Meeting dropdown untuk materi
             const scoreFilter = document.getElementById('admin-score-meeting-filter');
-            if(meetingSel) { 
-                meetingSel.innerHTML = "";
-                for(let i=1; i<=16; i++) meetingSel.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`; 
+            
+            if(meetingSel && mMeetingSel) { 
+                meetingSel.innerHTML = ""; mMeetingSel.innerHTML = "";
+                for(let i=1; i<=16; i++) {
+                    const opt = `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`;
+                    meetingSel.innerHTML += opt;
+                    mMeetingSel.innerHTML += opt;
+                }
             }
             if(scoreFilter) {
                 scoreFilter.innerHTML = '<option value="all">Semua Pertemuan</option>';
                 for(let i=1; i<=16; i++) scoreFilter.innerHTML += `<option value="${i}">Pertemuan ${i} ${i==8?'(UTS)':i==16?'(UAS)':''}</option>`;
             }
-            const quillOptions = { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } };
-            pEditor = new Quill('#passage-editor-container', quillOptions);
-            qEditor = new Quill('#question-editor-container', quillOptions);
-            aEditor = new Quill('#announcement-editor-container', quillOptions);
+
+            // Quill initialization
+            const basicQuillOptions = { theme: 'snow', modules: { toolbar: [['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean']] } };
+            const complexQuillOptions = { 
+                theme: 'snow', 
+                modules: { 
+                    toolbar: [
+                        [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }, { 'align': [] }],
+                        ['link', 'image', 'video', 'formula'],
+                        ['clean']
+                    ] 
+                } 
+            };
+            
+            pEditor = new Quill('#passage-editor-container', basicQuillOptions);
+            qEditor = new Quill('#question-editor-container', basicQuillOptions);
+            aEditor = new Quill('#announcement-editor-container', basicQuillOptions);
+            // Editor dengan toolbar full/lengkap untuk Materi Pembelajaran
+            mEditor = new Quill('#material-editor-container', complexQuillOptions);
             
             _sb.auth.onAuthStateChange((event, session) => {
               if (session) { currentUser = session.user; fetchProfileAndShow(currentUser.id); } 
