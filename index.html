@@ -13,8 +13,6 @@
     <!-- Quill.js untuk Rich Text Editor -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
-    <!-- SortableJS untuk Drag and Drop -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <!-- SheetJS / XLSX Library untuk Export Excel -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
@@ -125,10 +123,10 @@
             background-image: url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEitq6K8XKsviEbBdFfHL-9YbgLWt4KbbTcRMyWC747rknHeUIYkfRcuOehg0qGk5RfS0heMcINquTsklME_Ta2RpT2o2lGm3T-jf9OnDlUgv8VOZOXeYObOOZ4iL6dj_D5Hnga_skQu7aR9bWEFvEwxTL54t2YxxZig_1JOMk1QegE95mpYujwyvT1fP3wJ/s320/ChatGPT%20Image%20Apr%206,%202026,%2009_00_30%20PM.png');
             background-size: cover;
             background-position: center;
-            filter: blur(1px);
+            filter: blur(4px);
             opacity: 0.6;
             z-index: -1;
-            transform: scale(1.05); /* Avoid white edges due to blur */
+            transform: scale(1.1); /* Avoid white edges due to blur */
         }
     </style>
 </head>
@@ -196,7 +194,7 @@
                 <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"></i></button>
             </div>
             <p class="text-slate-500 text-sm mb-4 leading-relaxed">Tempelkan data JSON soal (format Array) di kotak bawah ini.</p>
-            <textarea id="import-json-textarea" class="w-full h-64 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-sage outline-none mb-6" placeholder='[ { "question_text": "...", "option_a": "...", "meeting_number": 1, ... } ]'></textarea>
+            <textarea id="import-json-textarea" class="w-full h-64 p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-mono text-xs focus:ring-2 focus:ring-sage outline-none mb-6" placeholder='[ { "question_text": "...", "option_a": "...", "meeting_number": 1, "pola": 1 } ]'></textarea>
             <div class="flex gap-3">
                 <button onclick="closeImportModal()" class="flex-1 bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-200 transition uppercase tracking-wider text-xs">Batal</button>
                 <button onclick="processPastedJSON()" class="flex-1 btn-primary py-4 rounded-2xl font-black shadow-lg uppercase tracking-wider text-xs transition active:scale-95 text-white">Impor Sekarang</button>
@@ -249,13 +247,13 @@
             <!-- Background specifically for Auth View -->
             <div class="auth-background"></div>
             
-            <div class="bg-white/1 backdrop-blur-md p-10 rounded-[2.5rem] shadow-2xl border border-white/50 relative z-10">
+            <div class="bg-white/20 backdrop-blur-md p-10 rounded-[2.5rem] shadow-2xl border border-white/50 relative z-10">
                 <div id="form-login">
                     <div class="text-center mb-10">
                         <div class="pastel-sage-light w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-inner">
                             <i data-lucide="user-check" class="text-sage-dark w-10 h-10"></i>
                         </div>
-                        <h2 class="text-3xl font-extrabold text-sage-dark drop-shadow-md">Login</h2>
+                        <h2 class="text-3xl font-extrabold text-sage-dark drop-shadow-md">Masuk Akun</h2>
                     </div>
                     <div class="space-y-6">
                         <input type="text" id="login-id" class="w-full p-4 bg-white/40 border border-white/50 rounded-2xl focus:ring-2 focus:ring-[#6B8E7E] focus:bg-white/70 outline-none transition font-medium backdrop-blur-sm placeholder-slate-600 text-slate-900" placeholder="Username / Email">
@@ -320,8 +318,8 @@
                         <i data-lucide="info" class="w-6 h-6"></i>
                     </div>
                     <div>
-                        <p class="font-black mb-1 text-base tracking-tight text-blue-900">Informasi</p>
-                        <p class="opacity-80 leading-relaxed font-medium">Jika terdapat ikon buku (<i data-lucide="book-open" class="w-4 h-4 inline mx-0.5 text-yellow-600"></i>) pada bagian meeting, Anda <strong>diwajibkan membaca materi</strong> tersebut. Setelah selesai, ikon akan berubah menjadi centang hijau (<i data-lucide="check-circle-2" class="w-4 h-4 inline text-green-500 mx-0.5"></i>) sebagai penanda materi sudah dipelajari.</p>
+                        <p class="font-black mb-1 text-base tracking-tight text-blue-900">Informasi Latihan & Materi</p>
+                        <p class="opacity-80 leading-relaxed font-medium">Batas maksimal pengerjaan latihan per pertemuan adalah <strong>3 KALI</strong> (dengan susunan soal yang berbeda). Jika terdapat ikon buku (<i data-lucide="book-open" class="w-4 h-4 inline mx-0.5 text-yellow-600"></i>), Anda <strong>diwajibkan membaca materi</strong> tersebut terlebih dahulu.</p>
                     </div>
                 </div>
 
@@ -332,7 +330,7 @@
                 <div class="md:col-span-2 bg-white p-8 rounded-[2.5rem] card-shadow border border-slate-100 h-fit">
                     <h3 class="font-black text-xl mb-6 flex items-center gap-3 text-sage-dark">
                         <span class="p-2.5 pastel-sage-light rounded-xl"><i data-lucide="award" class="w-6 h-6 text-sage-dark"></i></span>
-                        Riwayat Skor
+                        Riwayat Skor Anda
                     </h3>
                     <div id="student-scores-list" class="space-y-4"></div>
                 </div>
@@ -435,23 +433,33 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <input type="hidden" id="q-edit-id">
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Pertemuan (1-16)</label>
+                        
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Pertemuan (1-16)</label>
                             <select id="q-meeting" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold">
                             </select>
                         </div>
-                        <div class="md:col-span-2 text-slate-800">
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Teks Bacaan (Passage)</label>
+                        
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Pola Soal (Grup)</label>
+                            <input type="number" id="q-pola" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold text-slate-700" placeholder="Misal: 1" min="1">
+                            <p class="text-[9px] text-slate-400 mt-1 px-1">Soal dengan nomor pola yang sama akan diacak & dipilih 1 oleh sistem.</p>
+                        </div>
+
+                        <div class="md:col-span-2 text-slate-800 mt-2">
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Teks Bacaan (Passage)</label>
                             <div id="passage-editor-container" class="editor-box"></div>
                         </div>
                         <div class="md:col-span-2 text-slate-800">
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Teks Pertanyaan</label>
+                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest">Teks Pertanyaan</label>
                             <div id="question-editor-container" class="editor-box"></div>
                         </div>
+                        
                         <input type="text" id="q-opt-a" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi A">
                         <input type="text" id="q-opt-b" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi B">
                         <input type="text" id="q-opt-c" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi C">
                         <input type="text" id="q-opt-d" class="p-4 bg-slate-50 border rounded-2xl outline-none focus:border-[#6B8E7E] text-slate-700 font-medium" placeholder="Opsi D">
+                        
                         <select id="q-correct" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-[#6B8E7E] text-slate-700">
                             <option value="A">Jawaban A</option><option value="B">Jawaban B</option>
                             <option value="C">Jawaban C</option><option value="D">Jawaban D</option>
@@ -459,6 +467,7 @@
                         <select id="q-cat" class="p-4 bg-slate-50 border rounded-2xl font-bold outline-none focus:border-[#6B8E7E] text-slate-700">
                             <option value="Listening">Listening</option><option value="Reading">Reading</option>
                         </select>
+                        
                         <div class="md:col-span-2 grid grid-cols-2 gap-4">
                             <div class="p-4 border rounded-2xl bg-slate-50">
                                 <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Audio (.mp3)</label>
@@ -479,7 +488,7 @@
                     <table class="w-full text-left min-w-[700px]">
                         <thead class="bg-slate-50 border-b-2 border-slate-100">
                             <tr>
-                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center w-12"></th>
+                                <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Pola</th>
                                 <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest text-center">Pertm.</th>
                                 <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Kategori</th>
                                 <th class="p-6 font-black text-sage-dark text-xs uppercase tracking-widest">Soal</th>
@@ -488,11 +497,6 @@
                         </thead>
                         <tbody id="table-questions" class="divide-y divide-slate-100"></tbody>
                     </table>
-                </div>
-                <div id="save-order-container" class="hidden sticky bottom-6 flex justify-center">
-                    <button onclick="saveManualOrder()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-2xl flex items-center gap-3 hover:bg-indigo-700 transition transform active:scale-95">
-                        <i data-lucide="save" class="w-5 h-5 text-white"></i> SIMPAN PERUBAHAN URUTAN SOAL
-                    </button>
                 </div>
             </div>
 
@@ -613,6 +617,7 @@
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Program Studi</label>
                     <select id="self-prodi" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold text-slate-700">
+                        <option value="">Pilih Program Studi (Belum Set)</option>
                         <option value="S1 TTL-A">S1 TTL-A</option>
                         <option value="S1 TTL-B">S1 TTL-B</option>
                         <option value="S1 Keselamatan">S1 Keselamatan</option>
@@ -649,6 +654,7 @@
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-1 text-slate-400">Program Studi</label>
                     <select id="edit-prodi" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 font-medium">
+                        <option value="">Pilih Program Studi (Belum Set)</option>
                         <option value="S1 TTL-A">S1 TTL-A</option>
                         <option value="S1 TTL-B">S1 TTL-B</option>
                         <option value="S1 Keselamatan">S1 Keselamatan</option>
@@ -683,10 +689,10 @@
         let meetingLocks = {}; 
         let currentQuestionsRaw = []; 
         let materialsData = [];
-        let studentBestScores = {}; // Tambahan untuk menyimpan skor tertinggi per pertemuan
-        let sortableInstance = null;
-        let currentViewMaterialId = null; // Menyimpan ID materi yang sedang dilihat
-        let isTransitioning = false; // Penanda apakah sedang di layar transisi kategori
+        let studentBestScores = {}; 
+        let studentAttemptCounts = {}; // Menyimpan jumlah percobaan (maks 3)
+        let currentViewMaterialId = null; 
+        let isTransitioning = false; 
 
         // --- GLOBAL UTILITIES (WINDOW ASSIGNED EARLY) ---
         window.getToeicLevel = function(score) {
@@ -791,7 +797,7 @@
         window.openStudentMaterial = (id) => {
             const mat = materialsData.find(m => m.id === id);
             if(mat) {
-                currentViewMaterialId = id; // Simpan ID materi yang sedang dilihat
+                currentViewMaterialId = id; 
                 document.getElementById('modal-material-title').innerText = mat.title;
                 document.getElementById('modal-material-content').innerHTML = mat.content;
                 document.getElementById('student-material-modal').classList.remove('hidden');
@@ -800,10 +806,9 @@
 
         window.closeStudentMaterialModal = () => {
             if (currentViewMaterialId && currentUser) {
-                // Tandai materi sebagai "sudah dibaca" di LocalStorage
                 localStorage.setItem(`read_mat_${currentUser.id}_${currentViewMaterialId}`, 'true');
-                currentViewMaterialId = null; // Reset
-                window.generateMeetingsGrid(); // Perbarui tampilan ikon di grid
+                currentViewMaterialId = null; 
+                window.generateMeetingsGrid(); 
             }
             document.getElementById('student-material-modal').classList.add('hidden');
             document.getElementById('modal-material-content').innerHTML = '';
@@ -860,7 +865,6 @@
                 const isOpen = meetingLocks[i] || (currentUser && profileData && (profileData.role === 'admin' || profileData.username === 'admin'));
                 const isExam = (i === 8 || i === 16);
                 
-                // Cari apakah ada materi untuk pertemuan ini dan atur ikon status
                 let materialBtn = '';
                 const mat = materialsData.find(m => m.meeting_number == i);
                 if (mat && profileData && profileData.role !== 'admin' && profileData.username !== 'admin') {
@@ -874,27 +878,40 @@
                     materialBtn = `<div class="absolute top-2 right-2 px-2 py-1 bg-yellow-50 text-yellow-500 rounded-lg text-[8px] font-black tracking-widest border border-yellow-200 shadow-sm z-20"><i data-lucide="book" class="w-3 h-3 inline mr-1"></i>MATERI</div>`;
                 }
 
-                // Tambahkan Label Skor jika sudah pernah mengerjakan
+                // Cek Batasan Percobaan (3 Kali) & Skor Terbaik
+                const attempts = studentAttemptCounts[i] || 0;
+                const maxAttempts = 3;
+                const isStudent = profileData && profileData.role !== 'admin' && profileData.username !== 'admin';
+                const canAttempt = isStudent ? attempts < maxAttempts : true;
+                const isLocked = !isOpen && isStudent;
+                const btnDisabled = isLocked || !canAttempt;
+
                 let scoreBadge = '';
-                if (profileData && profileData.role !== 'admin' && profileData.username !== 'admin') {
+                if (isStudent) {
                     const bestScore = studentBestScores[i];
                     if (bestScore !== undefined) {
                         const level = window.getToeicLevel(bestScore);
-                        scoreBadge = `<div class="mt-3 w-full py-1.5 ${level.color} rounded-xl text-[10px] font-black shadow-sm flex items-center justify-center gap-1 border border-white/50"><i data-lucide="award" class="w-3 h-3"></i> SKOR: ${bestScore}</div>`;
+                        scoreBadge = `<div class="mt-3 w-full py-1.5 ${level.color} rounded-xl text-[10px] font-black shadow-sm flex items-center justify-center gap-1 border border-white/50"><i data-lucide="award" class="w-3 h-3"></i> SKOR TERTINGGI: ${bestScore}</div>`;
                     }
                 }
+
+                // Teks status (Terbuka, Terkunci, atau Habis Kuota)
+                let statusText = `${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}`;
+                if (isLocked) statusText = "Terkunci";
+                else if (isStudent && !canAttempt) statusText = "Batas Habis";
 
                 grid.innerHTML += `
                     <div class="relative w-full h-full flex">
                         ${materialBtn}
-                        <button onclick="${isOpen ? `startExam(${i})` : `window.notify('Meeting ini dikunci oleh dosen.', 'error')`}" 
-                                class="flex-1 w-full h-full flex flex-col justify-between items-center group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${isOpen ? 'border-slate-100 hover:border-sage' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'} relative z-10">
+                        <button onclick="${!btnDisabled ? `startExam(${i})` : `window.notify(isLocked ? 'Meeting ini dikunci oleh dosen.' : 'Batas maksimal pengerjaan tercapai.', 'error')`}" 
+                                class="flex-1 w-full h-full flex flex-col justify-between items-center group p-4 bg-white border-2 rounded-3xl transition-all text-center card-shadow active:scale-95 ${!btnDisabled ? 'border-slate-100 hover:border-sage' : 'border-slate-50 opacity-40 grayscale cursor-not-allowed'} relative z-10">
                             <div class="w-full">
-                                <div class="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${isOpen ? (isExam ? 'bg-rose-50 text-rose-500' : 'bg-sage-light text-sage-dark') : 'bg-slate-200 text-slate-400'}">
+                                <div class="w-10 h-10 mx-auto mb-2 rounded-xl flex items-center justify-center ${!btnDisabled ? (isExam ? 'bg-rose-50 text-rose-500' : 'bg-sage-light text-sage-dark') : 'bg-slate-200 text-slate-400'}">
                                     <i data-lucide="${!isOpen ? 'lock' : (isExam ? 'award' : 'book-text')}" class="w-5 h-5"></i>
                                 </div>
                                 <p class="text-[10px] font-black uppercase text-slate-400">Meeting ${i}</p>
-                                <p class="text-xs font-bold ${isOpen ? 'text-slate-800' : 'text-slate-400'}">${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}</p>
+                                <p class="text-xs font-bold ${!btnDisabled ? 'text-slate-800' : 'text-slate-400'}">${statusText}</p>
+                                ${isStudent ? `<p class="text-[9px] font-bold ${canAttempt ? 'text-slate-400' : 'text-rose-400'} mt-1">${attempts}/${maxAttempts} Kesempatan</p>` : ''}
                             </div>
                             ${scoreBadge}
                         </button>
@@ -1003,7 +1020,6 @@
                     }
 
                     // Aturan Nilai Tugas (Rata-rata dari pertemuan selain 8 dan 16)
-                    // Mengambil skor tertinggi dari tiap meeting tugas yang pernah dikerjakan
                     const tugasScores = [];
                     for(let i=1; i<=16; i++) {
                         if(i !== 8 && i !== 16) {
@@ -1015,7 +1031,6 @@
                     const avgTugas = tugasScores.length > 0 ? (sumTugas / tugasScores.length) : 0;
 
                     // Perhitungan Nilai Akhir (Skala 0-100)
-                    // Bobot default: Hadir 10%, Tugas 20%, UTS 30%, UAS 40%
                     const scaledTugas = (avgTugas / 990) * 100;
                     const scaledUTS = (utsScore / 990) * 100;
                     const scaledUAS = (uasScore / 990) * 100;
@@ -1082,7 +1097,6 @@
                 window.refreshIcons();
             }
 
-            // Memperbarui grid mahasiswa setelah data materi didapatkan agar memunculkan icon buku
             window.generateMeetingsGrid();
         }
 
@@ -1189,7 +1203,6 @@
             const body = document.getElementById('table-students'); if(!body) return;
             body.innerHTML = '';
             
-            // Filter by Role and Search Name
             const filteredStd = std?.filter(s => {
                 const isNotAdmin = s.role !== 'admin' && s.username !== 'admin';
                 const matchesSearch = s.full_name.toLowerCase().includes(searchVal) || s.username.toLowerCase().includes(searchVal);
@@ -1199,7 +1212,7 @@
             filteredStd?.forEach(s => {
                 const sScr = scr?.filter(sc => sc.user_id === s.id).sort((a,b) => b.total_score - a.total_score);
                 const best = sScr && sScr.length > 0 ? sScr[0].total_score : '0';
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 font-medium text-slate-500">${s.study_program || '-'}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="window.openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}', '${s.study_program}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i></button></td></tr>`;
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800"><td class="p-6 font-bold text-sage-dark">@${s.username}</td><td class="p-6 font-bold text-slate-800">${s.full_name}</td><td class="p-6 font-medium text-slate-500">${s.study_program || '-'}</td><td class="p-6 text-center font-black text-xl text-sage-dark">${best}</td><td class="p-6 text-right flex justify-end gap-2"><button onclick="window.openEditMhsModal('${s.id}', '${s.username}', '${s.full_name}', '${s.email}', '${s.study_program || ''}')" class="p-3 bg-white border rounded-xl text-blue-400 hover:bg-blue-50 transition-all shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteStudent('${s.id}')" class="p-3 bg-white border rounded-xl text-rose-400 hover:bg-rose-50 ml-2"><i data-lucide="user-x" class="w-4 h-4 text-rose-400"></i></button></td></tr>`;
             });
             window.refreshIcons();
         }
@@ -1210,23 +1223,10 @@
             body.innerHTML = ''; currentQuestionsRaw = data || []; 
             currentQuestionsRaw.forEach((q, index) => {
                 const cleanText = (q.question_text || "").replace(/<[^>]*>?/gm, '').substring(0, 50) + "...";
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800" data-id="${q.id}"><td class="p-4 text-center"><div class="drag-handle text-slate-300 hover:text-indigo-500"><i data-lucide="grip-vertical"></i></div></td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i></button></td></tr>`;
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800" data-id="${q.id}"><td class="p-6 text-center font-black text-slate-400">Pola ${q.sort_order || 1}</td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category==='Listening'?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${index})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i></button></td></tr>`;
             });
-            window.refreshIcons(); initDragAndDrop();
+            window.refreshIcons();
         }
-
-        function initDragAndDrop() {
-            const el = document.getElementById('table-questions'); if (!el) return;
-            if (sortableInstance) sortableInstance.destroy();
-            sortableInstance = new Sortable(el, { handle: '.drag-handle', animation: 250, ghostClass: 'sortable-ghost', onEnd: function() { document.getElementById('save-order-container').classList.remove('hidden'); } });
-        }
-
-        window.saveManualOrder = async function() {
-            window.setLoading(true); const rows = document.querySelectorAll('#table-questions tr');
-            try { for (let i = 0; i < rows.length; i++) { const id = rows[i].getAttribute('data-id'); await _sb.from('questions').update({ sort_order: i }).eq('id', id); }
-                window.notify("Urutan disimpan!"); document.getElementById('save-order-container').classList.add('hidden'); loadQuestionData();
-            } catch (err) { window.notify("Gagal!", "error"); } finally { window.setLoading(false); }
-        };
 
         window.handleSaveQuestion = async function() {
             const editId = document.getElementById('q-edit-id').value;
@@ -1235,7 +1235,8 @@
                 option_a: document.getElementById('q-opt-a').value, option_b: document.getElementById('q-opt-b').value,
                 option_c: document.getElementById('q-opt-c').value, option_d: document.getElementById('q-opt-d').value,
                 correct_answer: document.getElementById('q-correct').value, category: document.getElementById('q-cat').value,
-                meeting_number: parseInt(document.getElementById('q-meeting').value)
+                meeting_number: parseInt(document.getElementById('q-meeting').value),
+                sort_order: parseInt(document.getElementById('q-pola').value) || 1
             };
             if(qEditor.getText().trim()==="" || !qData.option_a) return window.notify("Lengkapi teks soal!", "error");
             window.setLoading(true);
@@ -1244,18 +1245,16 @@
                 if(aud) { const fn = `aud_${Date.now()}`; await _sb.storage.from('audio-soal').upload(fn, aud); qData.audio_url = `${SB_URL}/storage/v1/object/public/audio-soal/${fn}`; }
                 if(img) { const fn = `img_${Date.now()}`; await _sb.storage.from('image-soal').upload(fn, img); qData.image_url = `${SB_URL}/storage/v1/object/public/image-soal/${fn}`; }
                 if(editId) await _sb.from('questions').update(qData).eq('id', editId);
-                else {
-                    const { data: lastQ } = await _sb.from('questions').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle();
-                    qData.sort_order = (lastQ ? lastQ.sort_order : 0) + 1;
-                    await _sb.from('questions').insert([qData]);
-                }
+                else await _sb.from('questions').insert([qData]);
                 window.resetQuestionForm(); loadQuestionData(); window.notify("Berhasil!");
             } catch (err) { window.notify("Error!", "error"); } finally { window.setLoading(false); }
         };
 
         window.resetQuestionForm = function() {
             document.getElementById('form-question-title').innerText = 'Tambah Soal Baru';
-            document.getElementById('q-edit-id').value = ""; qEditor.setContents([]); pEditor.setContents([]);
+            document.getElementById('q-edit-id').value = ""; 
+            document.getElementById('q-pola').value = ""; 
+            qEditor.setContents([]); pEditor.setContents([]);
             ['q-opt-a','q-opt-b','q-opt-c','q-opt-d','q-audio-file','q-image-file'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             document.getElementById('btn-save-question').innerText = "SIMPAN DATA SOAL";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
@@ -1271,6 +1270,7 @@
             document.getElementById('q-opt-c').value = q.option_c || ''; document.getElementById('q-opt-d').value = q.option_d || '';
             document.getElementById('q-correct').value = q.correct_answer || 'A'; document.getElementById('q-cat').value = q.category || 'Listening';
             document.getElementById('q-meeting').value = q.meeting_number || 1;
+            document.getElementById('q-pola').value = q.sort_order || 1;
             document.getElementById('btn-save-question').innerText = "Update Data Soal";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1302,16 +1302,19 @@
         async function loadStudentScores() {
             const { data } = await _sb.from('scores').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
             
-            // Hitung skor terbaik per pertemuan untuk ditampilkan di grid
+            // Hitung skor terbaik & jumlah percobaan
             studentBestScores = {};
+            studentAttemptCounts = {};
+
             if (data && data.length > 0) {
                 data.forEach(s => {
                     if (studentBestScores[s.meeting_number] === undefined || s.total_score > studentBestScores[s.meeting_number]) {
                         studentBestScores[s.meeting_number] = s.total_score;
                     }
+                    studentAttemptCounts[s.meeting_number] = (studentAttemptCounts[s.meeting_number] || 0) + 1;
                 });
             }
-            // Render ulang grid pertemuan agar skor muncul di kartu
+            
             window.generateMeetingsGrid();
 
             const list = document.getElementById('student-scores-list'); if(!list) return;
@@ -1323,18 +1326,45 @@
 
         // --- STUDENT EXAM ENGINE ---
         async function startExam(meetingNo) {
-            window.setLoading(true); const { data } = await _sb.from('questions').select('*').eq('meeting_number', meetingNo).order('sort_order', { ascending: true }).order('created_at', { ascending: true }); 
-            window.setLoading(false); if(!data || data.length === 0) return window.notify("Soal kosong!", "error");
-            currentMeeting = meetingNo; examQuestions = data; studentAnswers = new Array(data.length).fill(null); currentIdx = 0;
-            isTransitioning = false; // Reset status transisi
-            let totalSeconds = 0; examQuestions.forEach(q => { totalSeconds += (q.category === 'Listening') ? 27 : 45; });
+            window.setLoading(true); 
+            const { data } = await _sb.from('questions').select('*').eq('meeting_number', meetingNo).order('sort_order', { ascending: true }); 
+            window.setLoading(false); 
+            
+            if(!data || data.length === 0) return window.notify("Soal kosong!", "error");
+            
+            // Proses Pengacakan & Pengelompokan Berdasarkan Pola (sort_order)
+            const groupedQuestions = {};
+            data.forEach(q => {
+                const pola = q.sort_order || 1;
+                if(!groupedQuestions[pola]) groupedQuestions[pola] = [];
+                groupedQuestions[pola].push(q);
+            });
+
+            // Ambil 1 soal acak dari tiap Grup Pola
+            const selectedQuestions = [];
+            Object.keys(groupedQuestions).sort((a,b) => a - b).forEach(pola => {
+                const group = groupedQuestions[pola];
+                const randomQ = group[Math.floor(Math.random() * group.length)];
+                selectedQuestions.push(randomQ);
+            });
+
+            currentMeeting = meetingNo; 
+            examQuestions = selectedQuestions; 
+            studentAnswers = new Array(selectedQuestions.length).fill(null); 
+            currentIdx = 0;
+            isTransitioning = false; 
+
+            let totalSeconds = 0; examQuestions.forEach(q => { totalSeconds += (q.category.includes('Listening')) ? 27 : 45; });
             if(totalSeconds < 120) totalSeconds = 120;
+            
             const isExam = (meetingNo === 8 || meetingNo === 16);
             const mLabel = document.getElementById('exam-mode-label'); if(mLabel) mLabel.innerText = isExam ? "MODE UJIAN DINAMIS" : `LATIHAN PERTEMUAN ${meetingNo}`;
             const tLabel = document.getElementById('exam-title'); if(tLabel) tLabel.innerText = isExam ? (meetingNo === 8 ? "MID-TERM EXAM (UTS)" : "FINAL EXAM (UAS)") : "TOEIC Latihan";
             const timerEl = document.getElementById('exam-timer'); if(timerEl) timerEl.classList.remove('hidden', 'timer-warning');
+            
             startTimer(totalSeconds); document.getElementById('view-student').classList.add('hidden');
             const eView = document.getElementById('view-exam'); if(eView) eView.classList.remove('hidden');
+            
             renderQuestion();
         }
 
@@ -1436,7 +1466,6 @@
             try {
                 raw = raw.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
                 const json = JSON.parse(raw);
-                // Ekstrak HANYA kolom yang ada di database agar tidak terjadi error karena kolom tidak dikenal (seperti 'explanation')
                 const itemsToInsert = json.map((q, index) => ({ 
                     question_text: q.question_text || "Teks soal kosong", 
                     passage_text: q.passage_text || null,
@@ -1447,7 +1476,8 @@
                     correct_answer: q.correct_answer || "A",
                     category: q.category || "Reading",
                     meeting_number: q.meeting_number || 1, 
-                    sort_order: index 
+                    // Jika ada pola di JSON, gunakan itu. Jika tidak, tetap beri urutan index
+                    sort_order: q.pola || q.sort_order || (index + 1) 
                 }));
                 const { error } = await _sb.from('questions').insert(itemsToInsert);
                 if (error) throw error;
