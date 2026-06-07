@@ -7,7 +7,7 @@ import AdminDashboard from './components/AdminDashboard';
 import ExamInterface from './components/ExamInterface';
 import Notification from './components/Notification';
 import {
-  BookOpenCheck, UserCheck, Settings, LogOut, ChevronRight, User, ShieldAlert,
+  BookOpen, BookOpenCheck, UserCheck, Settings, LogOut, ChevronRight, User, ShieldAlert,
   Loader2, Sparkles, Megaphone, CheckCircle, ShieldCheck, Mail, Lock as LockIcon
 } from 'lucide-react';
 
@@ -529,42 +529,41 @@ export default function App() {
       <nav className="bg-[#0F0F12] border-b border-white/5 text-white py-4.5 px-6 shrink-0 relative z-50 select-none">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#C2A35F] rounded flex items-center justify-center">
-              <span className="text-[#0A0A0B] font-extrabold text-xl">L</span>
+            <div className="w-10 h-10 bg-[#C2A35F] rounded flex items-center justify-center shadow-lg shadow-amber-500/10">
+              <BookOpen className="w-5.5 h-5.5 text-[#0A0A0B] stroke-[2.5]" />
             </div>
             <div>
               <span className="font-extrabold text-lg tracking-tight select-none text-white leading-none block uppercase">
                 TOEIC LMS
               </span>
-              <span className="text-[10px] font-semibold uppercase text-[#C2A35F] tracking-[0.25em] block mt-1 leading-none">
-                Layanan Akademik
-              </span>
             </div>
           </div>
 
-          {/* Database Mode Switcher Option */}
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 select-none">
-            <button
-              onClick={() => handleToggleDbMode('local')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
-                dbMode === 'local'
-                  ? 'bg-[#C2A35F] text-[#0A0A0B] shadow'
-                  : 'text-white/40 hover:text-white'
-              }`}
-            >
-              Sandbox Lokal (Sandbox)
-            </button>
-            <button
-              onClick={() => handleToggleDbMode('supabase')}
-              className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
-                dbMode === 'supabase'
-                  ? 'bg-[#C2A35F] text-[#0A0A0B] shadow'
-                  : 'text-white/40 hover:text-white'
-              }`}
-            >
-              Supabase Cloud (Online)
-            </button>
-          </div>
+          {/* Database Mode Switcher Option (Hanya terlihat oleh Admin/Dosen untuk mencegah kebingungan mahasiswa dan kecurangan data lokal) */}
+          {profileData && profileData.role === 'admin' && (
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 select-none animate-fade-in">
+              <button
+                onClick={() => handleToggleDbMode('local')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
+                  dbMode === 'local'
+                    ? 'bg-[#C2A35F] text-[#0A0A0B] shadow'
+                    : 'text-white/40 hover:text-white'
+                }`}
+              >
+                Sandbox Lokal (Sandbox)
+              </button>
+              <button
+                onClick={() => handleToggleDbMode('supabase')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
+                  dbMode === 'supabase'
+                    ? 'bg-[#C2A35F] text-[#0A0A0B] shadow'
+                    : 'text-white/40 hover:text-white'
+                }`}
+              >
+                Supabase Cloud (Online)
+              </button>
+            </div>
+          )}
 
           {profileData && (
             <div className="flex items-center gap-2 sm:gap-4 select-none">
