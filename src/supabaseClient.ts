@@ -8,17 +8,12 @@ export const realSupabase = createClient(SB_URL, SB_KEY);
 
 // Helper for Database Mode
 export function getDbMode(): 'supabase' | 'local' {
-  const mode = localStorage.getItem('toeic_lms_db_mode');
-  if (!mode) {
-    // Default to 'local' for zero-setup frictionless initial testing,
-    // or fallback dynamically when remote Supabase isn't updated.
-    return 'local';
-  }
-  return mode as 'supabase' | 'local';
+  // Always default strictly to online Supabase mode as requested
+  return 'supabase';
 }
 
 export function setDbMode(mode: 'supabase' | 'local') {
-  localStorage.setItem('toeic_lms_db_mode', mode);
+  localStorage.setItem('toeic_lms_db_mode', 'supabase');
   window.dispatchEvent(new Event('db-mode-changed'));
 }
 
@@ -39,8 +34,7 @@ const DEFAULT_ANNOUNCEMENT = {
   id: 1,
   content: `<p><b>Selamat datang mahasiswa di portal pembelajaran mandiri TOEIC LMS!</b></p>
   <p>Di sini Anda dapat mengakses materi pembelajaran interaktif pada bagian menu materi pertemuan, serta melakukan latihan soal yang diacak dengan pola terstandarisasi.</p>
-  <p>Silakan berkonsultasi dengan Dosen Pembimbing apabila ada latihan yang belum terbuka aksesnya.</p>
-  <p><i>Info Penting: Anda sedang menggunakan Database Sandbox Sandbox Lokal yang menjamin app dapat dijalankan tanpa hambatan jaringan.</i></p>`,
+  <p>Silakan berkonsultasi dengan Dosen Pembimbing apabila ada latihan yang belum terbuka aksesnya.</p>`,
   is_active: true
 };
 

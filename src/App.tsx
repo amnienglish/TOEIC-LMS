@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient';
+import { supabase, loadLocalTable } from './supabaseClient';
 import { Profile, Question, Score, Material, MeetingLock, Announcement, NotificationType } from './types';
 import { parseDeletedScoreIds } from './utils/softDelete';
 import StudentDashboard from './components/StudentDashboard';
@@ -12,11 +12,8 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  // Database Mode State Setup
-  const [dbMode, setDbModeState] = useState<'supabase' | 'local'>(() => {
-    const mode = localStorage.getItem('toeic_lms_db_mode');
-    return (mode as 'supabase' | 'local') || 'local';
-  });
+  // Database Mode Setup (Strictly Supabase Cloud Online only)
+  const dbMode = 'supabase';
   const [supabaseErrorMsg, setSupabaseErrorMsg] = useState<string | null>(null);
 
   // Authentication & Session
@@ -68,16 +65,6 @@ export default function App() {
 
   const handleDismissNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  // Switch Database Mode
-  const handleToggleDbMode = (mode: 'supabase' | 'local') => {
-    localStorage.setItem('toeic_lms_db_mode', mode);
-    setDbModeState(mode);
-    notify(`Penyimpanan basis data dialihkan ke: ${mode === 'supabase' ? 'Supabase Cloud (Online)' : 'Database Sandbox (Offline)'}`, 'info');
-    setTimeout(() => {
-      window.location.reload();
-    }, 850);
   };
 
   // Core background listener for automated fallback warnings
@@ -174,7 +161,9 @@ export default function App() {
       }
     } catch (err: any) {
       console.error('Error refreshing data: ', err);
-      notify('Koneksi database terganggu: ' + err.message, 'error');
+      const errMsg = err.message || 'Koneksi ke Supabase terganggu atau batas waktu habis (Timeout).';
+      setSupabaseErrorMsg(errMsg);
+      notify('Koneksi terganggu: Gagal mengambil data terbaru dari database.', 'error');
     } finally {
       setLoading(false);
     }
@@ -539,31 +528,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Database Mode Switcher Option (Hanya terlihat oleh Admin/Dosen untuk mencegah kebingungan mahasiswa dan kecurangan data lokal) */}
-          {profileData && profileData.role === 'admin' && (
-            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 select-none animate-fade-in">
-              <button
-                onClick={() => handleToggleDbMode('local')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
-                  dbMode === 'local'
-                    ? 'bg-[#C2A35F] text-[#0A0A0B] shadow'
-                    : 'text-white/40 hover:text-white'
-                }`}
-              >
-                Sandbox Lokal (Sandbox)
-              </button>
-              <button
-                onClick={() => handleToggleDbMode('supabase')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer ${
-                  dbMode === 'supabase'
-                    ? 'bg-[#C2A35F] text-[#0A0A0B] shadow'
-                    : 'text-white/40 hover:text-white'
-                }`}
-              >
-                Supabase Cloud (Online)
-              </button>
-            </div>
-          )}
+
 
           {profileData && (
             <div className="flex items-center gap-2 sm:gap-4 select-none">
@@ -583,7 +548,7 @@ export default function App() {
         </div>
       </nav>
 
-      {/* CONNECTION WARNING DIALOG fallbacks */}
+      {/* CONNECTION WARNING DIALOG (Untuk kegagalan koneksi Supabase Cloud) */}
       {supabaseErrorMsg && (
         <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-[550] p-4 backdrop-blur-md">
           <div className="bg-[#0F0F12] border border-red-500/35 w-full max-w-md rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden animate-modal">
@@ -591,14 +556,12 @@ export default function App() {
             <div className="w-16 h-16 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 p-1">
               <ShieldAlert className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2 leading-tight">Supabase Belum Diaktivasi</h3>
+            <h3 className="text-xl font-bold text-white mb-2 leading-tight">Database Cloud Terputus</h3>
             <p className="text-[10px] text-red-400 mb-4 uppercase tracking-widest font-black">
               Koneksi database awan terhambat
             </p>
             <p className="text-sm text-white/70 mb-6 leading-relaxed">
-              Koneksi ke alamat Supabase Cloud mengalami error atau skema tabel database di akun Anda belum dibuat.
-              <br className="mb-2" />
-              Ingin beralih ke <b>Sandbox Lokal</b> untuk menjalankan aplikasi dan evaluasi latihan dengan data simulasi yang lengkap?
+              Sistem gagal terhubung ke server database Supabase Cloud. Silakan periksa koneksi internet Anda atau hubungi Dosen Pembimbing / Administrator jika kendala tetap ada.
             </p>
             <div className="flex gap-3">
               <button
@@ -612,11 +575,11 @@ export default function App() {
                 type="button"
                 onClick={() => {
                   setSupabaseErrorMsg(null);
-                  handleToggleDbMode('local');
+                  refreshMasterData();
                 }}
                 className="flex-1 bg-[#C2A35F] hover:bg-[#C2A35F]/95 py-3 rounded-xl font-bold text-[#0A0A0B] transition cursor-pointer shadow-md text-xs uppercase tracking-wider font-extrabold border-0"
               >
-                Aktifkan Mode Sandbox
+                Coba Lagi
               </button>
             </div>
           </div>
