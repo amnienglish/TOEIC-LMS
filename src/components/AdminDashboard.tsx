@@ -357,12 +357,22 @@ export default function AdminDashboard({
 
     try {
       if (qEditId) {
-        const { error } = await supabase.from('questions').update(payload).eq('id', qEditId);
-        if (error) throw error;
+        let res = await supabase.from('questions').update(payload).eq('id', qEditId);
+        if (res.error && (res.error.message?.includes('explanation') || res.error.message?.includes('column') || res.error.message?.includes('cache'))) {
+          // Retry without the optional explanation column
+          const { explanation, ...retryPayload } = payload;
+          res = await supabase.from('questions').update(retryPayload).eq('id', qEditId);
+        }
+        if (res.error) throw res.error;
         onNotify('Data soal berhasil diperbarui!');
       } else {
-        const { error } = await supabase.from('questions').insert([payload]);
-        if (error) throw error;
+        let res = await supabase.from('questions').insert([payload]);
+        if (res.error && (res.error.message?.includes('explanation') || res.error.message?.includes('column') || res.error.message?.includes('cache'))) {
+          // Retry without the optional explanation column
+          const { explanation, ...retryPayload } = payload;
+          res = await supabase.from('questions').insert([retryPayload]);
+        }
+        if (res.error) throw res.error;
         onNotify('Soal baru berhasil ditambahkan! Pola: ' + payload.sort_order);
       }
       resetQuestionForm();
@@ -470,8 +480,13 @@ export default function AdminDashboard({
         explanation: item.explanation || null,
       }));
 
-      const { error } = await supabase.from('questions').insert(itemsToInsert);
-      if (error) throw error;
+      let res = await supabase.from('questions').insert(itemsToInsert);
+      if (res.error && (res.error.message?.includes('explanation') || res.error.message?.includes('column') || res.error.message?.includes('cache'))) {
+        // Retry without explanation column
+        const retryItems = itemsToInsert.map(({ explanation, ...rest }: any) => rest);
+        res = await supabase.from('questions').insert(retryItems);
+      }
+      if (res.error) throw res.error;
 
       onNotify(`Berhasil mengimpor ${itemsToInsert.length} soal ke database!`);
       setShowImportModal(false);

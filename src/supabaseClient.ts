@@ -431,6 +431,21 @@ class UniversalQueryBuilder {
 
       if (dbMode === 'supabase') {
         response = await this.executeSupabase();
+        
+        // If query fails due to network/timeout, fallback to local database silently
+        if (response.error) {
+          const errMsg = String(response.error.message || '');
+          if (
+            errMsg.includes('Timeout') ||
+            errMsg.includes('fetch') ||
+            errMsg.includes('relation') ||
+            errMsg.includes('connection') ||
+            errMsg.includes('terganggu')
+          ) {
+            console.warn("Koneksi Supabase terhambat. Mengalihkan query secara otomatis ke database lokal...");
+            response = await this.executeLocal();
+          }
+        }
       } else {
         response = await this.executeLocal();
       }
@@ -439,9 +454,16 @@ class UniversalQueryBuilder {
       return response;
     } catch (err: any) {
       console.error('Error on universal builder query execution: ', err);
-      const errResponse = { data: null, error: err };
-      if (onfulfilled) return onfulfilled(errResponse);
-      return errResponse;
+      // Fail-safe: Fallback to local table on any execution error
+      try {
+        const localResponse = await this.executeLocal();
+        if (onfulfilled) return onfulfilled(localResponse);
+        return localResponse;
+      } catch (localErr) {
+        const errResponse = { data: null, error: err };
+        if (onfulfilled) return onfulfilled(errResponse);
+        return errResponse;
+      }
     }
   }
 
