@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, loadLocalTable } from './supabaseClient';
-import { Profile, Question, Score, Material, MeetingLock, Announcement, NotificationType } from './types';
+import { supabase, loadLocalTable, getDbMode, setDbMode } from './supabaseClient';
+import { Profile, Question, Score, Material, MeetingLock, Announcement, NotificationType, EvaluationSettings } from './types';
 import { parseDeletedScoreIds } from './utils/softDelete';
 import StudentDashboard from './components/StudentDashboard';
 import AdminDashboard from './components/AdminDashboard';
@@ -12,9 +12,18 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  // Database Mode Setup (Strictly Supabase Cloud Online only)
-  const dbMode = 'supabase';
-  const [supabaseErrorMsg, setSupabaseErrorMsg] = useState<string | null>(null);
+  // Database Mode Setup
+  const [dbMode, setDbModeState] = useState<'supabase' | 'local'>(() => getDbMode());
+
+  useEffect(() => {
+    const handleDbModeChange = () => {
+      setDbModeState(getDbMode());
+    };
+    window.addEventListener('db-mode-changed', handleDbModeChange);
+    return () => {
+      window.removeEventListener('db-mode-changed', handleDbModeChange);
+    };
+  }, []);
 
   // Authentication & Session
   const [session, setSession] = useState<any>(null);
@@ -26,6 +35,10 @@ export default function App() {
   const [scores, setScores] = useState<Score[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [evalSettings, setEvalSettings] = useState<EvaluationSettings>({
+    show_explanation: true,
+    reveal_mode: 'setelah_selesai'
+  });
 
   // UI state
   const [loading, setLoading] = useState<boolean>(false);
@@ -69,9 +82,13 @@ export default function App() {
 
   // Core background listener for automated fallback warnings
   useEffect(() => {
-    const handleSupabaseError = (event: any) => {
-      const msg = event?.detail?.message || 'Hubungan ke Supabase terputus.';
-      setSupabaseErrorMsg(msg);
+    let lastToastTime = 0;
+    const handleSupabaseError = () => {
+      const now = Date.now();
+      if (now - lastToastTime > 15000) {
+        lastToastTime = now;
+        notify('Koneksi ke database cloud terhambat. Sistem otomatis mencoba menyambungkan kembali di latar belakang...', 'info');
+      }
     };
     window.addEventListener('supabase-error', handleSupabaseError);
     return () => {
@@ -112,6 +129,30 @@ export default function App() {
         .maybeSingle();
       if (aErr) throw aErr;
       setAnnouncement(annData || null);
+
+      // 3b. Fetch evaluation settings stored in announcements row id: 2
+      const { data: settingsData, error: sErr } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('id', 2)
+        .maybeSingle();
+
+      if (settingsData && settingsData.content) {
+        try {
+          const parsed = JSON.parse(settingsData.content);
+          setEvalSettings({
+            show_explanation: parsed.show_explanation !== false,
+            reveal_mode: parsed.reveal_mode || 'setelah_selesai'
+          });
+        } catch (e) {
+          console.error("Gagal membaca pengaturan evaluasi: ", e);
+        }
+      } else {
+        setEvalSettings({
+          show_explanation: true,
+          reveal_mode: 'setelah_selesai'
+        });
+      }
 
       // If user is logged in
       if (session) {
@@ -161,8 +202,6 @@ export default function App() {
       }
     } catch (err: any) {
       console.error('Error refreshing data: ', err);
-      const errMsg = err.message || 'Koneksi ke Supabase terganggu atau batas waktu habis (Timeout).';
-      setSupabaseErrorMsg(errMsg);
       notify('Koneksi terganggu: Gagal mengambil data terbaru dari database.', 'error');
     } finally {
       setLoading(false);
@@ -473,8 +512,8 @@ export default function App() {
   };
 
   // Complete exam and submit scores back to Supabase
-  const handleFinishExam = async (answers: Record<number, string | null>) => {
-    if (!profileData) return;
+  const handleFinishExam = async (answers: Record<number, string | null>): Promise<number | null> => {
+    if (!profileData) return null;
 
     setLoading(true);
     try {
@@ -500,11 +539,11 @@ export default function App() {
       if (error) throw error;
 
       notify(`Selesai! Skor evaluasi TOEIC Anda adalah: ${scaledScore} / 990.`, 'success');
-      setActiveExamMeeting(null);
-      setExamQuestions([]);
       await refreshMasterData();
+      return scaledScore;
     } catch (err: any) {
       notify('Gagal mengunggah skor evaluasi: ' + err.message, 'error');
+      return null;
     } finally {
       setLoading(false);
     }
@@ -525,17 +564,36 @@ export default function App() {
               <span className="font-extrabold text-lg tracking-tight select-none text-white leading-none block uppercase">
                 TOEIC LMS
               </span>
+              {dbMode === 'local' && (
+                <span className="inline-block mt-1 text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                  ⚠️ Sandbox Lokal (Offline)
+                </span>
+              )}
             </div>
           </div>
 
+          <div className="flex items-center gap-2 sm:gap-4 select-none">
+            {dbMode === 'local' && (
+              <button
+                onClick={() => {
+                  setDbMode('supabase');
+                  notify('Mencoba menyambungkan kembali ke database cloud...', 'info');
+                  refreshMasterData();
+                }}
+                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                ☁️ Hubungkan ke Database Cloud
+              </button>
+            )}
 
-
-          {profileData && (
-            <div className="flex items-center gap-2 sm:gap-4 select-none">
+            {profileData && (
               <div className="hidden sm:flex items-center gap-2 bg-white/5 text-white/80 px-3.5 py-1.5 border border-white/5 rounded-lg text-xs font-semibold">
                 <User className="w-3.5 h-3.5 text-[#C2A35F]" />
                 <span>{profileData.full_name}</span>
               </div>
+            )}
+
+            {profileData && (
               <button
                 onClick={handleSignOut}
                 className="bg-rose-950/20 hover:bg-rose-900/40 text-rose-300 border border-rose-900/30 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition select-none cursor-pointer hover:scale-105 active:scale-95"
@@ -543,48 +601,10 @@ export default function App() {
                 <LogOut className="w-3.5 h-3.5 text-rose-300" />
                 Keluar
               </button>
-            </div>
-          )}
-        </div>
-      </nav>
-
-      {/* CONNECTION WARNING DIALOG (Untuk kegagalan koneksi Supabase Cloud) */}
-      {supabaseErrorMsg && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-[550] p-4 backdrop-blur-md">
-          <div className="bg-[#0F0F12] border border-red-500/35 w-full max-w-md rounded-3xl shadow-2xl p-8 text-center relative overflow-hidden animate-modal">
-            <div className="absolute top-0 left-0 w-full h-1 bg-red-500" />
-            <div className="w-16 h-16 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 p-1">
-              <ShieldAlert className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2 leading-tight">Database Cloud Terputus</h3>
-            <p className="text-[10px] text-red-400 mb-4 uppercase tracking-widest font-black">
-              Koneksi database awan terhambat
-            </p>
-            <p className="text-sm text-white/70 mb-6 leading-relaxed">
-              Sistem gagal terhubung ke server database Supabase Cloud. Silakan periksa koneksi internet Anda atau hubungi Dosen Pembimbing / Administrator jika kendala tetap ada.
-            </p>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setSupabaseErrorMsg(null)}
-                className="flex-1 bg-white/5 border border-white/10 hover:bg-white/10 py-3 rounded-xl font-bold text-white/80 transition cursor-pointer text-xs"
-              >
-                Abaikan
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSupabaseErrorMsg(null);
-                  refreshMasterData();
-                }}
-                className="flex-1 bg-[#C2A35F] hover:bg-[#C2A35F]/95 py-3 rounded-xl font-bold text-[#0A0A0B] transition cursor-pointer shadow-md text-xs uppercase tracking-wider font-extrabold border-0"
-              >
-                Coba Lagi
-              </button>
-            </div>
+            )}
           </div>
         </div>
-      )}
+      </nav>
 
       {/* CORE DISPLAY WINDOW VIEW SWITCHBOARD */}
       <main className="flex-1 py-8 overflow-x-hidden relative">
@@ -769,6 +789,7 @@ export default function App() {
           <ExamInterface
             meetingNumber={activeExamMeeting}
             questions={examQuestions}
+            evalSettings={evalSettings}
             onCancelExam={() => {
               if (window.confirm('Keluar dari pengerjaan soal? Seluruh kemajuan tes ini akan dibatalkan.')) {
                 setActiveExamMeeting(null);
@@ -776,6 +797,10 @@ export default function App() {
               }
             }}
             onFinishExam={handleFinishExam}
+            onExitExam={() => {
+              setActiveExamMeeting(null);
+              setExamQuestions([]);
+            }}
           />
         ) : profileData.role === 'admin' || profileData.username === 'admin' ? (
           /* INSTRUCTOR ADMINISTRATIVE AREA */
@@ -786,6 +811,7 @@ export default function App() {
             materials={materials}
             meetingLocks={meetingLocks}
             announcement={announcement}
+            evalSettings={evalSettings}
             onRefreshData={refreshMasterData}
             onNotify={onNotify}
             loading={loading}

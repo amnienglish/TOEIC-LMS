@@ -8,12 +8,13 @@ export const realSupabase = createClient(SB_URL, SB_KEY);
 
 // Helper for Database Mode
 export function getDbMode(): 'supabase' | 'local' {
-  // Always default strictly to online Supabase mode as requested
+  const mode = localStorage.getItem('toeic_lms_db_mode');
+  if (mode === 'local') return 'local';
   return 'supabase';
 }
 
 export function setDbMode(mode: 'supabase' | 'local') {
-  localStorage.setItem('toeic_lms_db_mode', 'supabase');
+  localStorage.setItem('toeic_lms_db_mode', mode);
   window.dispatchEvent(new Event('db-mode-changed'));
 }
 
@@ -35,6 +36,12 @@ const DEFAULT_ANNOUNCEMENT = {
   content: `<p><b>Selamat datang mahasiswa di portal pembelajaran mandiri TOEIC LMS!</b></p>
   <p>Di sini Anda dapat mengakses materi pembelajaran interaktif pada bagian menu materi pertemuan, serta melakukan latihan soal yang diacak dengan pola terstandarisasi.</p>
   <p>Silakan berkonsultasi dengan Dosen Pembimbing apabila ada latihan yang belum terbuka aksesnya.</p>`,
+  is_active: true
+};
+
+const DEFAULT_EVAL_SETTINGS_ROW = {
+  id: 2,
+  content: '{"show_explanation":true,"reveal_mode":"setelah_selesai"}',
   is_active: true
 };
 
@@ -298,7 +305,7 @@ export function loadLocalTable(tableName: string): any[] {
   if (!data) {
     let initial: any[] = [];
     if (tableName === 'meeting_locks') initial = DEFAULT_MEETING_LOCKS;
-    else if (tableName === 'announcements') initial = [DEFAULT_ANNOUNCEMENT];
+    else if (tableName === 'announcements') initial = [DEFAULT_ANNOUNCEMENT, DEFAULT_EVAL_SETTINGS_ROW];
     else if (tableName === 'materials') initial = DEFAULT_MATERIALS;
     else if (tableName === 'questions') initial = DEFAULT_QUESTIONS;
     else if (tableName === 'profiles') {
@@ -471,9 +478,9 @@ class UniversalQueryBuilder {
         chain = chain.maybeSingle();
       }
 
-      // Prevent indefinite loading by racing the query with a 4-second timeout
+      // Prevent indefinite loading by racing the query with a 5-second timeout
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout: Supabase Cloud membutuhkan waktu respon yang terlalu lama (Proyek mungkin sedang dijeda atau koneksi internet lambat).")), 4000)
+        setTimeout(() => reject(new Error("Timeout: Supabase Cloud membutuhkan waktu respon yang terlalu lama (Proyek mungkin sedang dijeda atau koneksi internet lambat).")), 5000)
       );
 
       const res = await Promise.race([chain, timeoutPromise]) as any;

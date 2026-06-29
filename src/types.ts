@@ -22,6 +22,7 @@ export interface Question {
   sort_order: number; // Represents 'Pola / Question Slot Number'
   audio_url: string | null;
   image_url: string | null;
+  explanation?: string | null;
   created_at?: string;
 }
 
@@ -60,4 +61,9 @@ export interface NotificationType {
   id: string;
   message: string;
   type: 'success' | 'error' | 'info';
+}
+
+export interface EvaluationSettings {
+  show_explanation: boolean;
+  reveal_mode: 'per_soal' | 'setelah_selesai';
 }

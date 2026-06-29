@@ -4,7 +4,7 @@ import {
   Trash2, Edit3, UserCheck, Plus, Sparkles, FileUp, X, Check, FileText, ArrowRight, RefreshCw, AudioLines, Image as ImageIcon
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { Profile, Question, Score, Material, MeetingLock, Announcement } from '../types';
+import { Profile, Question, Score, Material, MeetingLock, Announcement, EvaluationSettings } from '../types';
 import { getToeicLevel } from '../utils/toeic';
 import { parseDeletedScoreIds, stringifyDeletedScoreIds } from '../utils/softDelete';
 import RichTextEditor from './RichTextEditor';
@@ -17,6 +17,7 @@ interface AdminDashboardProps {
   materials: Material[];
   meetingLocks: Record<number, boolean>;
   announcement: Announcement | null;
+  evalSettings: EvaluationSettings;
   onRefreshData: () => Promise<void>;
   onNotify: (msg: string, type?: 'success' | 'error' | 'info') => void;
   loading: boolean;
@@ -29,12 +30,22 @@ export default function AdminDashboard({
   materials,
   meetingLocks,
   announcement,
+  evalSettings,
   onRefreshData,
   onNotify,
   loading,
 }: AdminDashboardProps) {
   // Navigation
   const [activeTab, setActiveTab] = useState<'students' | 'scores' | 'questions' | 'materials' | 'locks' | 'announcements'>('students');
+
+  // Local states for Evaluation Settings config (synchronized with parent evalSettings prop)
+  const [showExplanation, setShowExplanation] = useState<boolean>(evalSettings.show_explanation);
+  const [revealMode, setRevealMode] = useState<'per_soal' | 'setelah_selesai'>(evalSettings.reveal_mode);
+
+  useEffect(() => {
+    setShowExplanation(evalSettings.show_explanation);
+    setRevealMode(evalSettings.reveal_mode);
+  }, [evalSettings]);
 
   // Search/Filters
   const [studentSearch, setStudentSearch] = useState<string>('');
@@ -66,6 +77,7 @@ export default function AdminDashboard({
   const [qCategory, setQCategory] = useState<'Listening' | 'Reading'>('Listening');
   const [qAudioUrl, setQAudioUrl] = useState<string>('');
   const [qImageUrl, setQImageUrl] = useState<string>('');
+  const [qExplanation, setQExplanation] = useState<string>('');
   const [qAudioSourceType, setQAudioSourceType] = useState<'url' | 'file'>('url');
   const [qImageSourceType, setQImageSourceType] = useState<'url' | 'file'>('url');
 
@@ -330,6 +342,7 @@ export default function AdminDashboard({
       sort_order: qPola || 1, // Will assign the recommended incremented Pattern
       audio_url: qAudioUrl.trim() ? qAudioUrl.trim() : null,
       image_url: qImageUrl.trim() ? qImageUrl.trim() : null,
+      explanation: qExplanation.trim() ? qExplanation.trim() : null,
     };
 
     try {
@@ -363,6 +376,7 @@ export default function AdminDashboard({
     setQCorrect(q.correct_answer);
     setQAudioUrl(q.audio_url || '');
     setQImageUrl(q.image_url || '');
+    setQExplanation(q.explanation || '');
     setQAudioSourceType(q.audio_url && q.audio_url.startsWith('data:') ? 'file' : 'url');
     setQImageSourceType(q.image_url && q.image_url.startsWith('data:') ? 'file' : 'url');
     window.scrollTo({ top: 350, behavior: 'smooth' });
@@ -381,6 +395,7 @@ export default function AdminDashboard({
     setQCorrect(q.correct_answer);
     setQAudioUrl(q.audio_url || '');
     setQImageUrl(q.image_url || '');
+    setQExplanation(q.explanation || '');
     setQAudioSourceType(q.audio_url && q.audio_url.startsWith('data:') ? 'file' : 'url');
     setQImageSourceType(q.image_url && q.image_url.startsWith('data:') ? 'file' : 'url');
     window.scrollTo({ top: 350, behavior: 'smooth' });
@@ -410,6 +425,7 @@ export default function AdminDashboard({
     setQCorrect('A');
     setQAudioUrl('');
     setQImageUrl('');
+    setQExplanation('');
     setQAudioSourceType('url');
     setQImageSourceType('url');
     // Automatically triggers Pola recalculation
@@ -441,6 +457,7 @@ export default function AdminDashboard({
         sort_order: item.pola || item.sort_order || (idx + 1),
         audio_url: item.audio_url || null,
         image_url: item.image_url || null,
+        explanation: item.explanation || null,
       }));
 
       const { error } = await supabase.from('questions').insert(itemsToInsert);
@@ -471,6 +488,29 @@ export default function AdminDashboard({
       await onRefreshData();
     } catch (err: any) {
       onNotify('Gagal memperbarui pengumuman: ' + err.message, 'error');
+    }
+  };
+
+  const handleSaveEvalSettings = async () => {
+    try {
+      const payloadString = JSON.stringify({
+        show_explanation: showExplanation,
+        reveal_mode: revealMode,
+      });
+
+      const { error } = await supabase
+        .from('announcements')
+        .update({
+          content: payloadString,
+          is_active: true,
+        })
+        .eq('id', 2);
+
+      if (error) throw error;
+      onNotify('Pengaturan penjelasan & pembahasan jawaban berhasil disimpan!');
+      await onRefreshData();
+    } catch (err: any) {
+      onNotify('Gagal menyimpan pengaturan: ' + err.message, 'error');
     }
   };
 
@@ -965,6 +1005,19 @@ export default function AdminDashboard({
                     height="h-32"
                   />
                 </div>
+              </div>
+
+              {/* Question Explanation editor */}
+              <div className="space-y-2 bg-white/5 border border-white/5 rounded-2xl p-4.5">
+                <label className="block text-xs font-bold text-white/60 leading-none mb-1.5">
+                  Penjelasan & Pembahasan Jawaban Benar (Explanation Script) - <i className="text-amber-300">Opsional</i>
+                </label>
+                <RichTextEditor
+                  value={qExplanation}
+                  onChange={setQExplanation}
+                  placeholder="Masukkan kalimat penjelasan atau pembahasan detail mengapa jawaban kunci tersebut adalah yang benar..."
+                  height="h-24"
+                />
               </div>
 
               {/* Option input forms */}
@@ -1575,6 +1628,95 @@ export default function AdminDashboard({
               className="w-full py-4 bg-emerald-800 hover:bg-emerald-950 text-white rounded-2xl font-black text-base shadow-lg hover:shadow-xl transition select-none tracking-widest uppercase cursor-pointer border-0"
             >
               Simpan Pengumuman Popup
+            </button>
+          </div>
+
+          {/* PEMBATAS RUANG */}
+          <div className="border-t border-slate-100 my-8"></div>
+
+          {/* EVALUATION SETTINGS CONTROL CARD */}
+          <div className="space-y-6">
+            <div className="space-y-1">
+              <h3 className="text-2xl font-black text-slate-800 tracking-tight leading-none flex items-center gap-2">
+                <Settings2 className="w-6 h-6 text-emerald-800 shrink-0" /> Pengaturan Penjelasan & Pembahasan Jawaban
+              </h3>
+              <p className="text-slate-400 font-semibold text-xs leading-relaxed">
+                Tentukan bagaimana pembahasan / penjelasan jawaban benar akan ditampilkan pada pengerjaan soal mahasiswa.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              {/* Toggle Option 1: Show or Hide */}
+              <div className="bg-slate-50 border border-slate-100 p-6 rounded-3xl flex flex-col justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-slate-700 text-sm">Aktifkan Pembahasan Jawaban</h4>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    Jika dinonaktifkan, siswa tidak akan pernah bisa melihat teks penjelasan dan kunci jawaban dari setiap soal.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 mt-2 self-start bg-white px-4 py-2 border border-slate-200 rounded-2xl shadow-sm">
+                  <span className={`text-[10px] font-black uppercase px-1 tracking-wider ${showExplanation ? 'text-emerald-700' : 'text-slate-400'}`}>
+                    {showExplanation ? 'Tampilkan' : 'Sembunyikan'}
+                  </span>
+                  <label className="switch shrink-0">
+                    <input type="checkbox" checked={showExplanation} onChange={(e) => setShowExplanation(e.target.checked)} />
+                    <span className="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Radio/Option 2: Mode Per-Soal or Saat-Selesai */}
+              <div className="bg-slate-50 border border-slate-100 p-6 rounded-3xl flex flex-col justify-between gap-4">
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-[#050505] text-sm">Waktu Penayangan Penjelasan</h4>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    Tentukan kapan penjelasan jawaban benar disajikan kepada siswa.
+                  </p>
+                </div>
+                
+                <div className="flex flex-col gap-2.5 mt-2">
+                  <label className={`flex items-center p-3 rounded-xl border text-xs font-bold cursor-pointer transition select-none ${
+                    revealMode === 'per_soal'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}>
+                    <input 
+                      type="radio" 
+                      name="reveal_mode" 
+                      value="per_soal"
+                      disabled={!showExplanation}
+                      checked={revealMode === 'per_soal'} 
+                      onChange={() => setRevealMode('per_soal')}
+                      className="mr-3 filter-emerald"
+                    />
+                    <span>⏱️ Muncul Langsung Setelah Menjawab Setiap Soal</span>
+                  </label>
+
+                  <label className={`flex items-center p-3 rounded-xl border text-xs font-bold cursor-pointer transition select-none ${
+                    revealMode === 'setelah_selesai'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  }`}>
+                    <input 
+                      type="radio" 
+                      name="reveal_mode" 
+                      value="setelah_selesai"
+                      disabled={!showExplanation}
+                      checked={revealMode === 'setelah_selesai'} 
+                      onChange={() => setRevealMode('setelah_selesai')}
+                      className="mr-3 filter-emerald"
+                    />
+                    <span>🏁 Menyelesaikan Seluruh Tes Baru Muncul Lembar Pembahasan</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveEvalSettings}
+              className="w-full py-4 bg-emerald-800 hover:bg-emerald-950 text-white rounded-2xl font-black text-base shadow-lg hover:shadow-xl transition select-none tracking-widest uppercase cursor-pointer border-0"
+            >
+              Simpan Pengaturan Evaluasi
             </button>
           </div>
         </div>
