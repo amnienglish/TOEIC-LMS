@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Users, Award, BookOpenCheck, Settings2, Megaphone, Search, Filter, FileSpreadsheet,
-  Trash2, Edit3, UserCheck, Plus, Sparkles, FileUp, X, Check, FileText, ArrowRight, RefreshCw, AudioLines, Image as ImageIcon
+  Trash2, Edit3, UserCheck, Plus, Sparkles, FileUp, X, Check, FileText, ArrowRight, RefreshCw, AudioLines, Image as ImageIcon,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 import { Profile, Question, Score, Material, MeetingLock, Announcement, EvaluationSettings } from '../types';
@@ -54,6 +55,15 @@ export default function AdminDashboard({
   const [qSearch, setQSearch] = useState<string>('');
   const [qMeetingFilter, setQMeetingFilter] = useState<string>('all');
   const [qCategoryFilter, setQCategoryFilter] = useState<string>('all');
+
+  // Pagination state for Bank Soal
+  const [qCurrentPage, setQCurrentPage] = useState<number>(1);
+  const [qItemsPerPage, setQItemsPerPage] = useState<number>(10);
+  const [qCustomItemsInput, setQCustomItemsInput] = useState<string>('10');
+
+  useEffect(() => {
+    setQCurrentPage(1);
+  }, [qSearch, qMeetingFilter, qCategoryFilter]);
 
   // Modals
   const [editingStudent, setEditingStudent] = useState<Profile | null>(null);
@@ -1286,6 +1296,15 @@ export default function AdminDashboard({
               return matchesSearch && matchesMeeting && matchesCategory;
             });
 
+            // Pagination calculation
+            const totalItems = filteredQuestions.length;
+            const itemsPerPageNum = Number(qItemsPerPage) || 10;
+            const totalPages = Math.ceil(totalItems / itemsPerPageNum) || 1;
+            const activePage = Math.min(Math.max(1, qCurrentPage), totalPages);
+            const startIndex = (activePage - 1) * itemsPerPageNum;
+            const endIndex = startIndex + itemsPerPageNum;
+            const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+
             return (
               <div className="space-y-4">
                 {/* Search and Filters Controls */}
@@ -1351,7 +1370,7 @@ export default function AdminDashboard({
 
                 <h3 className="font-extrabold text-lg flex items-center gap-2 text-white select-none">
                   <FileText className="w-5 h-5 text-[#C2A35F] shrink-0" /> Kode Soal & Pola yang Tersimpan (Total:{' '}
-                  {filteredQuestions.length === questions.length ? questions.length : `${filteredQuestions.length} dari ${questions.length}`})
+                  {totalItems === questions.length ? questions.length : `${totalItems} dari ${questions.length}`})
                 </h3>
 
                 <div className="bg-[#0F0F12] rounded-2xl border border-white/5 overflow-x-auto">
@@ -1366,8 +1385,8 @@ export default function AdminDashboard({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-sm font-semibold text-white/80">
-                      {filteredQuestions.length > 0 ? (
-                        filteredQuestions.map((q) => {
+                      {paginatedQuestions.length > 0 ? (
+                        paginatedQuestions.map((q) => {
                           const textStripped = q.question_text.replace(/<[^>]*>?/gm, '').substring(0, 60) + '...';
                           const isListening = q.category === 'Listening';
 
@@ -1427,6 +1446,86 @@ export default function AdminDashboard({
                     </tbody>
                   </table>
                 </div>
+
+                {/* PAGINATION AND ITEMS PER PAGE CONTROLS */}
+                {totalItems > 0 && (
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0F0F12] p-4 rounded-2xl border border-white/5 text-xs text-white/70 select-none">
+                    {/* Left: Items per Page Selector and Custom Input */}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-bold text-white/50">Tampilkan per halaman:</span>
+                      <div className="flex items-center bg-[#121217] border border-white/10 rounded-xl p-0.5">
+                        {[5, 10, 15, 20].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => {
+                              setQItemsPerPage(num);
+                              setQCustomItemsInput(num.toString());
+                              setQCurrentPage(1);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg font-black transition text-[11px] cursor-pointer ${
+                              qItemsPerPage === num && qCustomItemsInput === num.toString()
+                                ? 'bg-[#C2A35F] text-[#0A0A0B]'
+                                : 'hover:text-white text-white/60'
+                            }`}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Custom input with real-time numeric typing */}
+                      <div className="flex items-center gap-1.5 ml-1">
+                        <span className="text-white/40">Kustom:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="500"
+                          value={qCustomItemsInput}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setQCustomItemsInput(val);
+                            const parsed = parseInt(val, 10);
+                            if (!isNaN(parsed) && parsed > 0) {
+                              setQItemsPerPage(parsed);
+                              setQCurrentPage(1);
+                            }
+                          }}
+                          placeholder="8"
+                          className="w-14 px-2 py-1.5 bg-[#121217] border border-white/10 rounded-xl text-center font-black text-[#C2A35F] outline-none focus:border-[#C2A35F] text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right: Page Navigation Indicators */}
+                    <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+                      <button
+                        type="button"
+                        disabled={activePage === 1}
+                        onClick={() => setQCurrentPage(activePage - 1)}
+                        className="p-2.5 bg-[#121217] hover:bg-white/5 border border-white/10 rounded-xl font-bold text-white transition cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center"
+                        title="Halaman Sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4 text-[#C2A35F]" />
+                      </button>
+                      
+                      <span className="font-extrabold text-white text-xs select-none">
+                        Halaman <span className="text-[#C2A35F]">{activePage}</span> dari <span className="text-[#C2A35F]">{totalPages}</span>
+                        <span className="text-white/30 ml-2">({startIndex + 1} - {Math.min(endIndex, totalItems)} dari {totalItems} soal)</span>
+                      </span>
+
+                      <button
+                        type="button"
+                        disabled={activePage === totalPages}
+                        onClick={() => setQCurrentPage(activePage + 1)}
+                        className="p-2.5 bg-[#121217] hover:bg-white/5 border border-white/10 rounded-xl font-bold text-white transition cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed flex items-center justify-center"
+                        title="Halaman Berikutnya"
+                      >
+                        <ChevronRight className="w-4 h-4 text-[#C2A35F]" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}     </div>
