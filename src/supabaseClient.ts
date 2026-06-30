@@ -432,7 +432,7 @@ class UniversalQueryBuilder {
       if (dbMode === 'supabase') {
         response = await this.executeSupabase();
         
-        // If query fails due to network/timeout, fallback to local database silently
+        // If query fails due to network/timeout, fallback to local database silently and set mode to local
         if (response.error) {
           const errMsg = String(response.error.message || '');
           if (
@@ -443,6 +443,7 @@ class UniversalQueryBuilder {
             errMsg.includes('terganggu')
           ) {
             console.warn("Koneksi Supabase terhambat. Mengalihkan query secara otomatis ke database lokal...");
+            setDbMode('local');
             response = await this.executeLocal();
           }
         }
@@ -512,6 +513,21 @@ class UniversalQueryBuilder {
         // If tables are missing or request failed completely, notify of local mode recommendation
         if (res.error.code === '42P01' || msg.includes('relation') || msg.includes('fetch') || res.error.code === 'PGRST116') {
           triggerFallbackNotice(msg);
+        }
+      } else {
+        // Synchronize successful Supabase operations to local cache for reliable fallback
+        if (!this.isInsert && !this.isUpdate && !this.isDelete) {
+          // If this is a full SELECT with no filters, cache the entire dataset
+          if (this.filters.length === 0 && Array.isArray(res.data)) {
+            saveLocalTable(tableNameMapper(this.tableName), res.data);
+          }
+        } else {
+          // If this is an insert, update, or delete, replicate the write operation to the local cache
+          try {
+            await this.executeLocal();
+          } catch (syncErr) {
+            console.warn('Gagal mensinkronisasikan perubahan data ke cache lokal:', syncErr);
+          }
         }
       }
       return { data: res.data, error: res.error };

@@ -4,7 +4,7 @@ import {
   Trash2, Edit3, UserCheck, Plus, Sparkles, FileUp, X, Check, FileText, ArrowRight, RefreshCw, AudioLines, Image as ImageIcon,
   ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { supabase } from '../supabaseClient';
+import { supabase, getDbMode, setDbMode } from '../supabaseClient';
 import { Profile, Question, Score, Material, MeetingLock, Announcement, EvaluationSettings } from '../types';
 import { getToeicLevel } from '../utils/toeic';
 import { parseDeletedScoreIds, stringifyDeletedScoreIds } from '../utils/softDelete';
@@ -38,6 +38,16 @@ export default function AdminDashboard({
 }: AdminDashboardProps) {
   // Navigation
   const [activeTab, setActiveTab] = useState<'students' | 'scores' | 'questions' | 'materials' | 'locks' | 'announcements'>('students');
+
+  const [currentDbMode, setCurrentDbMode] = useState<'supabase' | 'local'>(() => getDbMode());
+
+  useEffect(() => {
+    const handleDbChange = () => {
+      setCurrentDbMode(getDbMode());
+    };
+    window.addEventListener('db-mode-changed', handleDbChange);
+    return () => window.removeEventListener('db-mode-changed', handleDbChange);
+  }, []);
 
   // Local states for Evaluation Settings config (synchronized with parent evalSettings prop)
   const [showExplanation, setShowExplanation] = useState<boolean>(evalSettings.show_explanation);
@@ -339,6 +349,7 @@ export default function AdminDashboard({
     if (!qQuestion.trim()) return onNotify('Pertanyaan utama harus diisi!', 'error');
     if (!qOptA.trim() || !qOptB.trim()) return onNotify('Opsi jawaban A & B wajib diisi!', 'error');
 
+    const newQuestionId = crypto.randomUUID ? crypto.randomUUID() : `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const payload = {
       question_text: qQuestion,
       passage_text: qPassage.trim() ? qPassage : null,
@@ -366,10 +377,11 @@ export default function AdminDashboard({
         if (res.error) throw res.error;
         onNotify('Data soal berhasil diperbarui!');
       } else {
-        let res = await supabase.from('questions').insert([payload]);
+        const insertPayload = { id: newQuestionId, ...payload };
+        let res = await supabase.from('questions').insert([insertPayload]);
         if (res.error && (res.error.message?.includes('explanation') || res.error.message?.includes('column') || res.error.message?.includes('cache'))) {
           // Retry without the optional explanation column
-          const { explanation, ...retryPayload } = payload;
+          const { explanation, ...retryPayload } = insertPayload;
           res = await supabase.from('questions').insert([retryPayload]);
         }
         if (res.error) throw res.error;
@@ -911,6 +923,30 @@ export default function AdminDashboard({
       {/* 3. QUESTION BANK BOARD */}
       {activeTab === 'questions' && (
         <div className="space-y-8 text-white">
+          {currentDbMode === 'local' && (
+            <div className="bg-amber-500/10 border border-amber-500/20 p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 select-none animate-fade-in">
+              <div className="space-y-1">
+                <h4 className="font-extrabold text-amber-300 flex items-center gap-2 text-sm">
+                  ⚠️ Mode Offline Aktif (Sandbox Lokal)
+                </h4>
+                <p className="text-white/75 text-xs font-semibold leading-relaxed max-w-2xl">
+                  Aplikasi sedang memuat data cadangan lokal di browser ini untuk menghindari hambatan koneksi cloud. Soal yang Anda simpan telah berhasil dikirim ke Cloud Supabase (sehingga siswa dapat membacanya jika koneksi mereka lancar), namun daftar soal di tabel bawah ini masih membaca data offline lokal di browser Anda.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  setDbMode('supabase');
+                  onNotify('Menghubungkan kembali ke database cloud dan memuat ulang...', 'info');
+                  await onRefreshData();
+                }}
+                className="bg-amber-500 text-[#0A0A0B] hover:bg-amber-400 font-black text-xs px-4 py-2.5 rounded-xl transition cursor-pointer whitespace-nowrap shadow-md active:scale-95 border-0"
+              >
+                ☁️ Hubungkan Ulang ke Server Cloud
+              </button>
+            </div>
+          )}
+
           {/* Question management form */}
           <div className="bg-[#0F0F12] p-6 sm:p-10 rounded-2xl border border-white/5 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-white/5 pb-5">
@@ -1294,19 +1330,30 @@ export default function AdminDashboard({
                   {/* Question List display table */}
           {(() => {
             const filteredQuestions = questions.filter((q) => {
-              const matchesSearch = qSearch.trim() === '' || 
-                q.question_text.toLowerCase().includes(qSearch.toLowerCase()) ||
-                (q.passage_text && q.passage_text.toLowerCase().includes(qSearch.toLowerCase())) ||
-                q.option_a.toLowerCase().includes(qSearch.toLowerCase()) ||
-                q.option_b.toLowerCase().includes(qSearch.toLowerCase()) ||
-                (q.option_c && q.option_c.toLowerCase().includes(qSearch.toLowerCase())) ||
-                (q.option_d && q.option_d.toLowerCase().includes(qSearch.toLowerCase())) ||
-                `pola ${q.sort_order}`.toLowerCase().includes(qSearch.toLowerCase()) ||
-                q.sort_order.toString().includes(qSearch) ||
-                `pertemuan ${q.meeting_number}`.toLowerCase().includes(qSearch.toLowerCase());
+              if (!q) return false;
+              const qText = q.question_text || '';
+              const qPassage = q.passage_text || '';
+              const qA = q.option_a || '';
+              const qB = q.option_b || '';
+              const qC = q.option_c || '';
+              const qD = q.option_d || '';
+              const qPolaNum = q.sort_order !== undefined && q.sort_order !== null ? q.sort_order : '';
+              const qMeetNum = q.meeting_number !== undefined && q.meeting_number !== null ? q.meeting_number : '';
+              const qCat = q.category || '';
 
-              const matchesMeeting = qMeetingFilter === 'all' || q.meeting_number.toString() === qMeetingFilter;
-              const matchesCategory = qCategoryFilter === 'all' || q.category.toLowerCase() === qCategoryFilter.toLowerCase();
+              const matchesSearch = qSearch.trim() === '' || 
+                qText.toLowerCase().includes(qSearch.toLowerCase()) ||
+                qPassage.toLowerCase().includes(qSearch.toLowerCase()) ||
+                qA.toLowerCase().includes(qSearch.toLowerCase()) ||
+                qB.toLowerCase().includes(qSearch.toLowerCase()) ||
+                qC.toLowerCase().includes(qSearch.toLowerCase()) ||
+                qD.toLowerCase().includes(qSearch.toLowerCase()) ||
+                `pola ${qPolaNum}`.toLowerCase().includes(qSearch.toLowerCase()) ||
+                qPolaNum.toString().includes(qSearch) ||
+                `pertemuan ${qMeetNum}`.toLowerCase().includes(qSearch.toLowerCase());
+
+              const matchesMeeting = qMeetingFilter === 'all' || qMeetNum.toString() === qMeetingFilter;
+              const matchesCategory = qCategoryFilter === 'all' || qCat.toLowerCase() === qCategoryFilter.toLowerCase();
 
               return matchesSearch && matchesMeeting && matchesCategory;
             });
@@ -1453,8 +1500,26 @@ export default function AdminDashboard({
                         })
                       ) : (
                         <tr>
-                          <td colSpan={5} className="p-10 text-center italic text-white/30 font-medium">
-                            Tidak ditemukan hasil pencarian soal yang sesuai.
+                          <td colSpan={5} className="p-12 text-center text-white/50 space-y-4">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <span className="text-white/40 italic font-medium">Tidak ditemukan hasil pencarian soal yang sesuai.</span>
+                              <p className="text-xs text-white/45 max-w-lg mt-1 leading-relaxed">
+                                Tip: Jika Anda baru saja menambahkan soal di database online namun tidak muncul di tabel ini, pastikan status database Anda adalah 🟢 <b>Cloud Database (Aktif)</b>. Jika Anda sedang berada dalam mode Sandbox Offline, maka Anda hanya melihat data cadangan lokal.
+                              </p>
+                              {currentDbMode === 'local' && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    setDbMode('supabase');
+                                    onNotify('Menghubungkan kembali ke database cloud dan memuat ulang...', 'info');
+                                    await onRefreshData();
+                                  }}
+                                  className="mt-3 bg-amber-500 hover:bg-amber-400 text-[#0A0A0B] px-4.5 py-2.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 shadow-lg shadow-amber-500/10 border-0 active:scale-95"
+                                >
+                                  ☁️ Hubungkan ke Database Cloud Sekarang
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       )}

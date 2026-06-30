@@ -564,27 +564,57 @@ export default function App() {
               <span className="font-extrabold text-lg tracking-tight select-none text-white leading-none block uppercase">
                 TOEIC LMS
               </span>
-              {dbMode === 'local' && (
-                <span className="inline-block mt-1 text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
-                  ⚠️ Sandbox Lokal (Offline)
-                </span>
-              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4 select-none">
-            {dbMode === 'local' && (
-              <button
-                onClick={() => {
-                  setDbMode('supabase');
-                  notify('Mencoba menyambungkan kembali ke database cloud...', 'info');
-                  refreshMasterData();
-                }}
-                className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                ☁️ Hubungkan ke Database Cloud
-              </button>
-            )}
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 select-none">
+            {/* DATABASE STATUS CONTROLLER */}
+            <div className="flex items-center gap-2 bg-[#121217] border border-white/10 rounded-2xl px-3 py-1.5 shadow-inner">
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                Database:
+              </span>
+              {dbMode === 'supabase' ? (
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider">
+                    Cloud (Supabase)
+                  </span>
+                  <button
+                    onClick={() => {
+                      setDbMode('local');
+                      notify('Beralih ke mode offline (Sandbox Lokal)...', 'info');
+                      refreshMasterData();
+                    }}
+                    className="ml-1.5 text-[9px] bg-white/5 hover:bg-rose-500/10 text-white/50 hover:text-rose-300 px-2 py-0.5 rounded-lg border border-white/5 transition font-bold cursor-pointer"
+                    title="Beralih ke Database Offline Lokal"
+                  >
+                    Set Offline
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                  <span className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider">
+                    Lokal (Sandbox Offline)
+                  </span>
+                  <button
+                    onClick={() => {
+                      setDbMode('supabase');
+                      notify('Mencoba menyambungkan kembali ke database cloud...', 'info');
+                      refreshMasterData();
+                    }}
+                    className="ml-1.5 bg-amber-500 hover:bg-amber-400 text-[#0A0A0B] px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wide transition shadow-md shadow-amber-500/10 flex items-center gap-1 border-0 cursor-pointer active:scale-95"
+                  >
+                    ☁️ Hubungkan ke Cloud
+                  </button>
+                </div>
+              )}
+            </div>
 
             {profileData && (
               <div className="hidden sm:flex items-center gap-2 bg-white/5 text-white/80 px-3.5 py-1.5 border border-white/5 rounded-lg text-xs font-semibold">
