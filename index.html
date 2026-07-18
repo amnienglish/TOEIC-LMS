@@ -469,18 +469,18 @@
                             <option value="Listening">Listening</option><option value="Reading">Reading</option>
                         </select>
                         
-                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2 grid grid-cols-2 gap-4">
                             <div class="p-4 border rounded-2xl bg-slate-50">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Audio (.mp3) - Upload File</label>
-                                <input type="file" id="q-audio-file" accept="audio/*" class="w-full text-xs mb-3">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">ATAU Gunakan Audio URL</label>
-                                <input type="text" id="q-audio-url-input" class="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 text-xs" placeholder="https://contoh.com/audio.mp3">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Audio (File .mp3)</label>
+                                <input type="file" id="q-audio-file" accept="audio/*" class="w-full text-xs mb-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 mt-2 border-t border-slate-200 pt-2">ATAU URL Audio</label>
+                                <input type="text" id="q-audio-url" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#6B8E7E] text-xs" placeholder="https://contoh.com/audio.mp3">
                             </div>
                             <div class="p-4 border rounded-2xl bg-slate-50">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Gambar (.jpg/png) - Upload File</label>
-                                <input type="file" id="q-image-file" accept="image/*" class="w-full text-xs mb-3">
-                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">ATAU Gunakan Gambar URL</label>
-                                <input type="text" id="q-image-url-input" class="w-full p-3 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-[#6B8E7E] text-slate-700 text-xs" placeholder="https://contoh.com/gambar.jpg">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1">Gambar (File .jpg/png)</label>
+                                <input type="file" id="q-image-file" accept="image/*" class="w-full text-xs mb-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase mb-1 mt-2 border-t border-slate-200 pt-2">ATAU URL Gambar</label>
+                                <input type="text" id="q-image-url" class="w-full p-2 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#6B8E7E] text-xs" placeholder="https://contoh.com/gambar.jpg">
                             </div>
                         </div>
                         <div class="md:col-span-2 flex gap-3">
@@ -585,24 +585,26 @@
             <div id="admin-tab-announcement" class="hidden space-y-8 text-slate-800">
                 <div class="bg-white p-10 rounded-[2.5rem] card-shadow border border-slate-100">
                     <div class="flex justify-between items-center mb-8">
-                        <h3 class="font-black text-2xl text-sage-dark">Set Pengumuman</h3>
-                        <div class="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-200">
-                            <span class="text-xs font-black uppercase text-slate-400">Status Aktif</span>
-                            <label class="switch">
-                                <input type="checkbox" id="announcement-is-active" onchange="handleAnnouncementStatusChange(this.checked)">
-                                <span class="slider"></span>
-                            </label>
+                        <h3 class="font-black text-2xl text-sage-dark">Set Pengumuman Pop-up</h3>
+                        <div class="flex items-center">
+                            <div class="flex items-center gap-3 bg-slate-50 px-6 py-3 rounded-2xl border border-slate-200">
+                                <span class="text-xs font-black uppercase text-slate-400">Status Pop-up</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="announcement-is-active" onchange="handleAnnouncementStatusChange(this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="bg-slate-50 px-6 py-3 rounded-2xl border border-slate-200 ml-4">
+                                <span class="text-xs font-black uppercase text-slate-400 block mb-1">Tampil Di:</span>
+                                <select id="announcement-display-mode" onchange="handleAnnouncementDisplayModeChange(this.value)" class="bg-white border border-slate-200 text-xs font-bold p-1 rounded">
+                                    <option value="both">Login & Mahasiswa</option>
+                                    <option value="login">Halaman Login Saja</option>
+                                    <option value="student">Pop-up Mahasiswa Saja</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <div class="space-y-6">
-                        <div>
-                            <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Lokasi Tampil</label>
-                            <select id="announcement-display-mode" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#6B8E7E] font-bold text-slate-700">
-                                <option value="both">Keduanya (Halaman Login & Pop-up Dashboard)</option>
-                                <option value="login">Hanya Halaman Login (Banner)</option>
-                                <option value="popup">Hanya Pop-up Dashboard Mahasiswa</option>
-                            </select>
-                        </div>
                         <div>
                             <label class="block text-xs font-black uppercase text-slate-400 mb-2 ml-1 tracking-widest text-slate-400">Isi Pengumuman</label>
                             <div id="announcement-editor-container" class="editor-box" style="height: 250px;"></div>
@@ -728,7 +730,7 @@
         let examTimer = null, timeLeft = 0, currentMeeting = 1;
         let meetingLocks = {}; 
         let currentQuestionsRaw = []; 
-        let currentQPage = 1; // Menyimpan status halaman tabel bank soal
+        let currentQPage = 1; 
         let materialsData = [];
         let studentBestScores = {}; 
         let studentAttemptCounts = {}; 
@@ -826,7 +828,6 @@
             }, "Ya, Hapus");
         };
 
-        // Fungsi Single Delete Question
         window.deleteQuestion = (id) => {
             window.customConfirm("Hapus soal ini secara permanen?", async () => {
                 window.setLoading(true);
@@ -836,7 +837,6 @@
             }, "Ya, Hapus");
         };
 
-        // Fungsi Hapus Semua Soal Berdasarkan Filter Pertemuan
         window.deleteAllFilteredQuestions = () => {
             const filterMeet = document.getElementById('q-filter-meeting')?.value || 'all';
             if(filterMeet === 'all') return window.notify("Pilih Pertemuan Spesifik (1-16) di filter sebelah kiri untuk menghapus semua soalnya!", "error");
@@ -938,7 +938,6 @@
                     materialBtn = `<div class="absolute top-2 right-2 px-2 py-1 bg-yellow-50 text-yellow-500 rounded-lg text-[8px] font-black tracking-widest border border-yellow-200 shadow-sm z-20"><i data-lucide="book" class="w-3 h-3 inline mr-1"></i>MATERI</div>`;
                 }
 
-                // Cek Batasan Percobaan (3 Kali latihan, 1 Kali UTS/UAS) & Skor Terbaik
                 const attempts = studentAttemptCounts[i] || 0;
                 const maxAttempts = isExam ? 1 : 3;
                 const isStudent = profileData && profileData.role !== 'admin' && profileData.username !== 'admin';
@@ -955,7 +954,6 @@
                     }
                 }
 
-                // Teks status (Terbuka, Terkunci, atau Habis Kuota)
                 let statusText = `${isExam ? (i==8?'UTS':'UAS') : 'Latihan'}`;
                 if (isLocked) statusText = "Terkunci";
                 else if (isStudent && !canAttempt) statusText = "Batas Habis";
@@ -1009,7 +1007,6 @@
         async function fetchAnnouncement() {
             const { data } = await _sb.from('announcements').select('*').eq('id', 1).maybeSingle();
             if (data) {
-                // Set Editor state for Admin
                 if (profileData && profileData.role === 'admin') {
                     if (aEditor) aEditor.root.innerHTML = data.content;
                     const activeCb = document.getElementById('announcement-is-active');
@@ -1020,19 +1017,19 @@
 
                 const banner = document.getElementById('login-announcement-banner');
                 const bannerContent = document.getElementById('login-announcement-content');
-                const displayMode = data.display_mode || 'both';
+                const mode = data.display_mode || 'both';
                 
                 if (data.is_active && data.content.trim() !== "") {
-                    // Tampilkan di Halaman Login Jika Belum Login (Berdasarkan Mode)
-                    if (banner && bannerContent && !currentUser && (displayMode === 'login' || displayMode === 'both')) {
+                    // Tampilkan Login Banner
+                    if (banner && bannerContent && !currentUser && (mode === 'login' || mode === 'both')) {
                         bannerContent.innerHTML = data.content;
                         banner.classList.remove('hidden');
                     } else if (banner) {
                         banner.classList.add('hidden');
                     }
                     
-                    // Tampilkan Pop-Up Jika User (Mahasiswa) sudah Login (Berdasarkan Mode)
-                    if (profileData && profileData.role !== 'admin' && (displayMode === 'popup' || displayMode === 'both')) {
+                    // Tampilkan Pop-Up Mahasiswa
+                    if (profileData && profileData.role !== 'admin' && (mode === 'student' || mode === 'both')) {
                         const modalContent = document.getElementById('announcement-content-display');
                         const modal = document.getElementById('student-announcement-modal');
                         if (modalContent && modal) {
@@ -1041,7 +1038,6 @@
                         }
                     }
                 } else {
-                    // Sembunyikan banner login jika tidak aktif
                     if (banner) banner.classList.add('hidden');
                 }
                 window.refreshIcons();
@@ -1055,13 +1051,16 @@
             if (!error) window.notify(`Pop-up Pengumuman sekarang ${status ? 'AKTIF' : 'NON-AKTIF'}`);
         };
 
+        window.handleAnnouncementDisplayModeChange = async function(val) {
+            window.setLoading(true);
+            const { error } = await _sb.from('announcements').update({ display_mode: val }).eq('id', 1);
+            window.setLoading(false);
+            if (!error) window.notify(`Mode tampilan pengumuman diperbarui!`);
+        }
+
         window.handleSaveAnnouncement = async function() {
             window.setLoading(true);
-            const mode = document.getElementById('announcement-display-mode').value;
-            const { error } = await _sb.from('announcements').update({ 
-                content: aEditor.root.innerHTML,
-                display_mode: mode
-            }).eq('id', 1);
+            const { error } = await _sb.from('announcements').update({ content: aEditor.root.innerHTML }).eq('id', 1);
             window.setLoading(false);
             if (!error) window.notify("Pengumuman berhasil diperbarui!");
             else window.notify("Gagal memperbarui pengumuman.", "error");
@@ -1073,9 +1072,7 @@
         window.exportToExcel = async function() {
             window.setLoading(true);
             try {
-                // Ambil semua data mahasiswa (kecuali admin)
                 const { data: profiles } = await _sb.from('profiles').select('*').neq('role', 'admin').neq('username', 'admin');
-                // Ambil semua skor mahasiswa
                 const { data: scores } = await _sb.from('scores').select('*');
                 
                 if (!profiles || profiles.length === 0) {
@@ -1083,15 +1080,12 @@
                     return;
                 }
 
-                // Proses perhitungan dan pembentukan baris data excel
                 const exportData = profiles.map(student => {
                     const studentScores = scores ? scores.filter(s => s.user_id === student.id) : [];
                     
-                    // Hitung persentase kehadiran (berdasarkan jumlah pertemuan yg dikerjakan dari 16)
                     const uniqueMeetings = new Set(studentScores.map(s => s.meeting_number));
                     const p = (uniqueMeetings.size / 16) * 100;
                     
-                    // Ambil nilai UTS & UAS berdasarkan history skor tertinggi di pertemuan tersebut
                     const utsData = studentScores.filter(s => s.meeting_number == 8).sort((a,b) => b.total_score - a.total_score)[0];
                     const uasData = studentScores.filter(s => s.meeting_number == 16).sort((a,b) => b.total_score - a.total_score)[0];
                     const utsScore = utsData ? utsData.total_score : 0;
@@ -1099,18 +1093,16 @@
                     const hasUTS = !!utsData;
                     const hasUAS = !!uasData;
 
-                    // Aturan Nilai Kehadiran
                     let kehadiran = 0;
                     if (!hasUTS || !hasUAS) {
                         if (p < 50) kehadiran = 0;
                         else kehadiran = 50;
                     } else {
                         if (p > 75) kehadiran = 90;
-                        else if (p >= 50) kehadiran = 70; // 74% ke bawah sampai 50%
-                        else kehadiran = 50; // di bawah 50%
+                        else if (p >= 50) kehadiran = 70; 
+                        else kehadiran = 50;
                     }
 
-                    // Aturan Nilai Tugas (Rata-rata dari pertemuan selain 8 dan 16)
                     const tugasScores = [];
                     for(let i=1; i<=16; i++) {
                         if(i !== 8 && i !== 16) {
@@ -1121,14 +1113,12 @@
                     const sumTugas = tugasScores.reduce((acc, curr) => acc + curr, 0);
                     const avgTugas = tugasScores.length > 0 ? (sumTugas / tugasScores.length) : 0;
 
-                    // Perhitungan Nilai Akhir (Skala 0-100)
                     const scaledTugas = (avgTugas / 990) * 100;
                     const scaledUTS = (utsScore / 990) * 100;
                     const scaledUAS = (uasScore / 990) * 100;
                     
                     const NA = (kehadiran * 0.1) + (scaledTugas * 0.2) + (scaledUTS * 0.3) + (scaledUAS * 0.4);
 
-                    // Konversi Nilai Akhir (Berdasarkan rentang dari sistem penilaian standar)
                     let huruf = 'E', angka = '0.00', predikat = 'Tidak Lulus', setara = '< 400', ket = 'Wajib mengulang mata kuliah';
                     if (NA >= 85) { 
                         huruf = 'A'; angka = '4.00'; predikat = 'Sangat Baik'; setara = '750–990'; ket = 'Sangat siap pasar kerja internasional'; 
@@ -1158,12 +1148,10 @@
                     };
                 });
 
-                // Membentuk Excel via SheetJS
                 const worksheet = XLSX.utils.json_to_sheet(exportData);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap Nilai Akhir");
 
-                // Download file
                 XLSX.writeFile(workbook, "Rekap_Nilai_Akhir_TOEIC.xlsx");
                 window.notify("Data berhasil diekspor ke Excel!");
             } catch (error) {
@@ -1308,7 +1296,6 @@
             window.refreshIcons();
         }
 
-        // Paginasi & Tampilan Tabel Soal
         async function loadQuestionData() {
             const { data } = await _sb.from('questions').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true });
             currentQuestionsRaw = data || []; 
@@ -1350,11 +1337,13 @@
                 const originalIndex = currentQuestionsRaw.findIndex(orig => orig.id === q.id); 
                 const cleanText = (q.question_text || "").replace(/<[^>]*>?/gm, '').substring(0, 50) + "...";
                 
-                // Logika Tampilan Nomor Pola sesuai Permintaan
+                // Tampilan Nomor Pola 
                 let prefix = q.category.toLowerCase().includes('listening') ? 'L' : '';
                 let polaDisplay = prefix + q.meeting_number.toString() + (q.sort_order || 1).toString();
+                // Regex extraction info untuk debugging admin
+                const cleanPolaNum = Number(String(q.sort_order).replace(/[^0-9]/g, '')) || 1;
 
-                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800" data-id="${q.id}"><td class="p-6 text-center font-black text-slate-400">${polaDisplay}</td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category.toLowerCase().includes('listening')?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${originalIndex})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i></button></td></tr>`;
+                body.innerHTML += `<tr class="hover:bg-slate-50 transition-colors text-slate-800" data-id="${q.id}"><td class="p-6 text-center"><span class="font-black text-slate-600">${polaDisplay}</span><br><span class="text-[9px] font-bold text-slate-400">Pola Asli: ${cleanPolaNum}</span></td><td class="p-6 text-center font-black text-slate-400">#${q.meeting_number}</td><td class="p-6 font-bold text-xs uppercase ${q.category.toLowerCase().includes('listening')?'text-purple-600':'text-teal-600'}">${q.category}</td><td class="p-6 text-sm text-slate-500 max-w-xs truncate">${cleanText}</td><td class="p-6 text-right flex justify-end gap-3"><button onclick="editQuestionByIndex(${originalIndex})" class="p-3 bg-white border border-slate-200 rounded-xl text-blue-400 hover:bg-blue-50 shadow-sm"><i data-lucide="edit-3" class="w-4 h-4 text-blue-400"></i></button><button onclick="deleteQuestion('${q.id}')" class="p-3 bg-white border-2 border-slate-800 rounded-xl text-rose-500 shadow-sm"><i data-lucide="trash-2" class="w-4 h-4 text-rose-500"></i></button></td></tr>`;
             });
 
             const pageInfo = document.getElementById('q-page-info');
@@ -1379,20 +1368,22 @@
                 meeting_number: parseInt(document.getElementById('q-meeting').value),
                 sort_order: parseInt(document.getElementById('q-pola').value) || 1
             };
+            
             if(qEditor.getText().trim()==="" || !qData.option_a) return window.notify("Lengkapi teks soal!", "error");
+            
+            // Logika URL Audio & Image (Memprioritaskan Input Text jika ada)
+            const urlAudio = document.getElementById('q-audio-url').value.trim();
+            if(urlAudio) qData.audio_url = urlAudio;
+            const urlImage = document.getElementById('q-image-url').value.trim();
+            if(urlImage) qData.image_url = urlImage;
+
             window.setLoading(true);
             try {
+                // Menimpa dengan file upload jika user juga upload file
                 const aud = document.getElementById('q-audio-file').files[0], img = document.getElementById('q-image-file').files[0];
-                const audUrl = document.getElementById('q-audio-url-input').value.trim(), imgUrl = document.getElementById('q-image-url-input').value.trim();
-                
                 if(aud) { const fn = `aud_${Date.now()}`; await _sb.storage.from('audio-soal').upload(fn, aud); qData.audio_url = `${SB_URL}/storage/v1/object/public/audio-soal/${fn}`; }
-                else if (audUrl) { qData.audio_url = audUrl; }
-                else { qData.audio_url = null; }
-
                 if(img) { const fn = `img_${Date.now()}`; await _sb.storage.from('image-soal').upload(fn, img); qData.image_url = `${SB_URL}/storage/v1/object/public/image-soal/${fn}`; }
-                else if (imgUrl) { qData.image_url = imgUrl; }
-                else { qData.image_url = null; }
-
+                
                 if(editId) await _sb.from('questions').update(qData).eq('id', editId);
                 else await _sb.from('questions').insert([qData]);
                 window.resetQuestionForm(); loadQuestionData(); window.notify("Berhasil!");
@@ -1404,7 +1395,7 @@
             document.getElementById('q-edit-id').value = ""; 
             document.getElementById('q-pola').value = ""; 
             qEditor.setContents([]); pEditor.setContents([]);
-            ['q-opt-a','q-opt-b','q-opt-c','q-opt-d','q-audio-file','q-image-file','q-audio-url-input','q-image-url-input'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+            ['q-opt-a','q-opt-b','q-opt-c','q-opt-d','q-audio-file','q-image-file','q-audio-url','q-image-url'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
             document.getElementById('btn-save-question').innerText = "SIMPAN DATA SOAL";
             document.getElementById('btn-cancel-edit').classList.add('hidden');
         };
@@ -1420,8 +1411,11 @@
             document.getElementById('q-correct').value = q.correct_answer || 'A'; document.getElementById('q-cat').value = q.category || 'Listening';
             document.getElementById('q-meeting').value = q.meeting_number || 1;
             document.getElementById('q-pola').value = q.sort_order || 1;
-            document.getElementById('q-audio-url-input').value = q.audio_url || '';
-            document.getElementById('q-image-url-input').value = q.image_url || '';
+            
+            // Load URLs
+            document.getElementById('q-audio-url').value = q.audio_url || '';
+            document.getElementById('q-image-url').value = q.image_url || '';
+
             document.getElementById('btn-save-question').innerText = "Update Data Soal";
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1453,7 +1447,6 @@
         async function loadStudentScores() {
             const { data } = await _sb.from('scores').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
             
-            // Hitung skor terbaik & jumlah percobaan
             studentBestScores = {};
             studentAttemptCounts = {};
 
@@ -1486,18 +1479,46 @@
             // Proses Pengacakan & Pengelompokan Berdasarkan Pola (sort_order)
             const groupedQuestions = {};
             data.forEach(q => {
-                const pola = q.sort_order || 1;
-                if(!groupedQuestions[pola]) groupedQuestions[pola] = [];
-                groupedQuestions[pola].push(q);
+                // Ekstrak angka murni untuk grup
+                const cleanPola = parseInt(String(q.sort_order).replace(/[^0-9]/g, ''), 10) || 1;
+                const cat = String(q.category || '').trim().toLowerCase();
+                
+                // Kunci unik grup
+                const polaKey = cat + '_' + cleanPola;
+                
+                if(!groupedQuestions[polaKey]) groupedQuestions[polaKey] = [];
+                groupedQuestions[polaKey].push(q);
             });
 
             // Ambil 1 soal acak dari tiap Grup Pola
-            const selectedQuestions = [];
-            Object.keys(groupedQuestions).sort((a,b) => a - b).forEach(pola => {
-                const group = groupedQuestions[pola];
+            let selectedQuestions = [];
+            Object.keys(groupedQuestions).forEach(key => {
+                const group = groupedQuestions[key];
                 const randomQ = group[Math.floor(Math.random() * group.length)];
                 selectedQuestions.push(randomQ);
             });
+
+            // LOGIKA PENGURUTAN ABSOLUT
+            selectedQuestions.sort((a, b) => {
+                const catA = String(a.category || '').trim().toLowerCase();
+                const catB = String(b.category || '').trim().toLowerCase();
+
+                const isListeningA = catA.includes('listen');
+                const isListeningB = catB.includes('listen');
+
+                // 1. PRIORITAS KATEGORI: Listening SELALU di atas Reading
+                if (isListeningA && !isListeningB) return -1;
+                if (!isListeningA && isListeningB) return 1;
+
+                // 2. PRIORITAS ANGKA: Urutkan murni berdasarkan besaran angka (Terkecil -> Terbesar)
+                const polaA = parseInt(String(a.sort_order).replace(/[^0-9]/g, ''), 10) || 0;
+                const polaB = parseInt(String(b.sort_order).replace(/[^0-9]/g, ''), 10) || 0;
+                
+                return polaA - polaB;
+            });
+            
+            // Bantuan Debugging di Console Browser
+            console.log("URUTAN SOAL UJIAN YANG DI-GENERATE SISTEM:", selectedQuestions.map(q => `${q.category.toUpperCase()} - Pola: ${q.sort_order}`));
 
             currentMeeting = meetingNo; 
             examQuestions = selectedQuestions; 
@@ -1505,7 +1526,7 @@
             currentIdx = 0;
             isTransitioning = false; 
 
-            let totalSeconds = 0; examQuestions.forEach(q => { totalSeconds += (q.category.includes('Listening')) ? 27 : 45; });
+            let totalSeconds = 0; examQuestions.forEach(q => { totalSeconds += (String(q.category).toLowerCase().includes('listen')) ? 27 : 45; });
             if(totalSeconds < 120) totalSeconds = 120;
             
             const isExam = (meetingNo === 8 || meetingNo === 16);
@@ -1538,7 +1559,7 @@
             let m = ''; if(q.audio_url) m += `<div class="bg-slate-50 p-6 rounded-3xl mb-4 border-2"><audio id="q-audio-player" controls autoplay src="${q.audio_url}" class="w-full"></audio></div>`;
             if(q.image_url) m += `<div class="mb-6 rounded-3xl overflow-hidden border-2 shadow-sm flex justify-center bg-white p-2"><img src="${q.image_url}" class="max-w-md h-auto rounded-lg shadow-inner" onerror="this.style.display='none'"></div>`;
             let passageHtml = q.passage_text ? `<div class="bg-amber-50 p-8 rounded-3xl mb-8 border-2 border-amber-200 ql-editor passage-content max-h-[500px] overflow-y-auto text-slate-800 text-slate-800">${q.passage_text}</div>` : '';
-            box.innerHTML = `<div class="mb-8 flex justify-between items-center text-slate-500 font-bold text-slate-500"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest text-slate-500">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest text-slate-400">${q.category}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed ql-editor px-0 font-medium text-slate-800">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="window.selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner text-sage-dark':'border-slate-100 bg-white hover:border-slate-300 text-slate-700'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
+            box.innerHTML = `<div class="mb-8 flex justify-between items-center text-slate-500 font-bold text-slate-500"><span class="text-xs font-black px-4 py-2 bg-slate-100 rounded-full text-slate-500 uppercase tracking-widest text-slate-500">SOAL ${currentIdx + 1} / ${examQuestions.length}</span><span class="text-xs font-bold text-slate-400 uppercase tracking-widest text-slate-400">${q.category} • POLA: ${q.sort_order}</span></div>${passageHtml}${m}<div class="mb-10 text-xl text-slate-800 leading-relaxed ql-editor px-0 font-medium text-slate-800">${q.question_text}</div><div class="grid grid-cols-1 gap-4">${['A','B','C','D'].map(opt => { const sel=studentAnswers[currentIdx]===opt; return `<button onclick="window.selectAnswer('${opt}')" class="flex items-center p-5 border-2 rounded-3xl transition-all ${sel?'border-sage bg-[#F0F4E8] shadow-inner text-sage-dark':'border-slate-100 bg-white hover:border-slate-300 text-slate-700'}"><span class="w-10 h-10 flex items-center justify-center rounded-xl mr-4 font-black ${sel?'pastel-sage text-white':'bg-slate-100 text-slate-400'}">${opt}</span><span class="font-bold text-lg text-left">${q['option_'+opt.toLowerCase()]||''}</span></button>`; }).join('')}</div>`;
             
             const audioPlayer = document.getElementById('q-audio-player');
             if(audioPlayer) {
@@ -1552,17 +1573,15 @@
         window.selectAnswer = (ans) => { studentAnswers[currentIdx] = ans; renderQuestion(); };
         
         window.changeQuestion = (s) => { 
-            // Handle navigasi saat berada di layar transisi
             if (isTransitioning) {
                 isTransitioning = false;
-                if (s === -1) currentIdx -= 1; // Jika klik kembali, mundur ke soal sebelumnya
+                if (s === -1) currentIdx -= 1;
                 renderQuestion();
                 return;
             }
 
             if(s === 1 && currentIdx === examQuestions.length - 1) return finishExam(); 
             
-            // Deteksi perubahan kategori untuk memunculkan layar transisi
             if (s === 1 && examQuestions[currentIdx].category !== examQuestions[currentIdx + 1].category) {
                 currentIdx += 1;
                 isTransitioning = true;
@@ -1650,9 +1669,9 @@
             
             // Populating options
             const meetingSel = document.getElementById('q-meeting');
-            const mMeetingSel = document.getElementById('m-meeting'); // Meeting dropdown untuk materi
+            const mMeetingSel = document.getElementById('m-meeting'); 
             const scoreFilter = document.getElementById('admin-score-meeting-filter');
-            const qFilterSel = document.getElementById('q-filter-meeting'); // Filter Bank Soal
+            const qFilterSel = document.getElementById('q-filter-meeting'); 
             
             if(meetingSel && mMeetingSel) { 
                 meetingSel.innerHTML = ""; mMeetingSel.innerHTML = "";
@@ -1710,11 +1729,11 @@
                   document.getElementById('nav-user-info').classList.add('hidden'); 
                   document.getElementById('view-admin').classList.add('hidden'); 
                   document.getElementById('view-student').classList.add('hidden'); 
-                  fetchAnnouncement(); // Panggil fetch announcement di halaman login
+                  fetchAnnouncement();
               }
             });
             fetchMeetingLocks();
-            fetchAnnouncement(); // Panggil fetch announcement segera setelah web dimuat
+            fetchAnnouncement();
         };
     </script>
 </body>
